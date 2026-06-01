@@ -780,6 +780,45 @@ body {
   padding: 12px 14px;
 }
 
+.extra-points {
+  margin: 4px 14px 14px;
+  background: var(--grey-50);
+  border: 1.5px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.extra-points-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--grey-700);
+  margin-bottom: 10px;
+}
+
+.extra-points-teams {
+  display: flex;
+  gap: 10px;
+}
+
+.extra-points-team {
+  flex: 1;
+}
+
+.extra-points-team-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--grey-600);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.extra-points-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .closest-to-pin-label {
   font-size: 0.8125rem;
   font-weight: 700;

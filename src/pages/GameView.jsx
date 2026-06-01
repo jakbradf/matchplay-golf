@@ -119,6 +119,19 @@ function HoleScoringView({ game, scores, course, gameCode }) {
     }));
   }, []);
 
+  const handleExtraPointChange = useCallback((teamIdx, delta) => {
+    const teamKey = `team${teamIdx}`;
+    setLocalScores(prev => {
+      const base = (prev[teamKey]?.extraPoints !== undefined
+        ? prev[teamKey].extraPoints
+        : savedHoleScores[teamKey]?.extraPoints) || 0;
+      return {
+        ...prev,
+        [teamKey]: { ...(prev[teamKey] || {}), extraPoints: Math.max(0, base + delta) },
+      };
+    });
+  }, [savedHoleScores]);
+
   const saveCurrentHole = async () => {
     // Merge local into saved
     const toSave = {
@@ -271,6 +284,35 @@ function HoleScoringView({ game, scores, course, gameCode }) {
                 </div>
               );
             })}
+
+            {/* Extra points */}
+            <div className="extra-points">
+              <div className="extra-points-label">⭐ Extra Points</div>
+              <div className="extra-points-teams">
+                {game.teams.map((team, ti) => {
+                  const pts = effectiveScores[`team${ti}`]?.extraPoints || 0;
+                  return (
+                    <div key={ti} className="extra-points-team">
+                      <div className="extra-points-team-name">{team.name}</div>
+                      <div className="extra-points-controls">
+                        <button
+                          className="score-btn minus"
+                          onClick={() => handleExtraPointChange(ti, -1)}
+                          disabled={pts === 0}
+                          aria-label="Remove extra point"
+                        >−</button>
+                        <div className="score-display">{pts}</div>
+                        <button
+                          className="score-btn plus"
+                          onClick={() => handleExtraPointChange(ti, 1)}
+                          aria-label="Add extra point"
+                        >+</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Hole result preview */}
             {holeResult && (

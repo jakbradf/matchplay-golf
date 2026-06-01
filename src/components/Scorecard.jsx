@@ -20,6 +20,8 @@ export default function Scorecard({ scores, teams, course }) {
   const renderHalfTable = (rows, label) => {
     const team0pts = rows.reduce((s, d) => s + (d.result?.team0points || 0), 0);
     const team1pts = rows.reduce((s, d) => s + (d.result?.team1points || 0), 0);
+    const team0extra = rows.reduce((s, d) => s + (d.holeScores?.team0?.extraPoints || 0), 0);
+    const team1extra = rows.reduce((s, d) => s + (d.holeScores?.team1?.extraPoints || 0), 0);
 
     return (
       <div className="scorecard-wrapper" style={{ marginBottom: 12 }}>
@@ -77,10 +79,14 @@ export default function Scorecard({ scores, teams, course }) {
               <td colSpan={3}>Total</td>
               {teams[0].players.map((_, i) => <td key={i} />)}
               <td />
-              <td style={{ color: 'var(--green-dark)' }}>{team0pts}pts</td>
+              <td style={{ color: 'var(--green-dark)' }}>
+                {team0pts}pts{team0extra > 0 ? ` +${team0extra}⭐` : ''}
+              </td>
               {teams[1].players.map((_, i) => <td key={i} />)}
               <td />
-              <td style={{ color: 'var(--green-dark)' }}>{team1pts}pts</td>
+              <td style={{ color: 'var(--green-dark)' }}>
+                {team1pts}pts{team1extra > 0 ? ` +${team1extra}⭐` : ''}
+              </td>
             </tr>
           </tbody>
         </table>

@@ -76,7 +76,7 @@ export function getMatchStatus(cumulativeScores, teamNames) {
   return `${leading} ${Math.abs(diff)} UP`;
 }
 
-// Compute cumulative points for all completed holes
+// Compute cumulative points for all completed holes (includes extra points)
 export function computeMatchScore(allHoleScores, teams, courseHoles) {
   let team0total = 0;
   let team1total = 0;
@@ -87,6 +87,10 @@ export function computeMatchScore(allHoleScores, teams, courseHoles) {
     if (result) {
       team0total += result.team0points;
       team1total += result.team1points;
+    }
+    if (holeScores) {
+      team0total += holeScores.team0?.extraPoints || 0;
+      team1total += holeScores.team1?.extraPoints || 0;
     }
   });
 

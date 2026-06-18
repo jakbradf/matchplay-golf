@@ -52,7 +52,34 @@ export const DROBAK_GK = {
   ]
 };
 
-export const ALL_COURSES = [STROMSTAD_GK, DROBAK_GK];
+export const MOSS_RYGGE_GK = {
+  id: 'moss-rygge-gk',
+  name: 'Moss og Rygge Golfklubb',
+  location: 'Moss, Norway',
+  par: 72,
+  holes: [
+    { number: 1,  par: 5, strokeIndex: 13, distance: 484, isParThree: false },
+    { number: 2,  par: 4, strokeIndex: 9,  distance: 333, isParThree: false },
+    { number: 3,  par: 4, strokeIndex: 15, distance: 351, isParThree: false },
+    { number: 4,  par: 5, strokeIndex: 3,  distance: 535, isParThree: false },
+    { number: 5,  par: 4, strokeIndex: 1,  distance: 394, isParThree: false },
+    { number: 6,  par: 3, strokeIndex: 17, distance: 152, isParThree: true  },
+    { number: 7,  par: 5, strokeIndex: 11, distance: 495, isParThree: false },
+    { number: 8,  par: 3, strokeIndex: 7,  distance: 194, isParThree: true  },
+    { number: 9,  par: 4, strokeIndex: 5,  distance: 359, isParThree: false },
+    { number: 10, par: 3, strokeIndex: 18, distance: 153, isParThree: true  },
+    { number: 11, par: 4, strokeIndex: 4,  distance: 383, isParThree: false },
+    { number: 12, par: 4, strokeIndex: 10, distance: 358, isParThree: false },
+    { number: 13, par: 4, strokeIndex: 8,  distance: 295, isParThree: false },
+    { number: 14, par: 3, strokeIndex: 14, distance: 139, isParThree: true  },
+    { number: 15, par: 4, strokeIndex: 16, distance: 319, isParThree: false },
+    { number: 16, par: 4, strokeIndex: 2,  distance: 325, isParThree: false },
+    { number: 17, par: 4, strokeIndex: 6,  distance: 369, isParThree: false },
+    { number: 18, par: 5, strokeIndex: 12, distance: 471, isParThree: false },
+  ]
+};
+
+export const ALL_COURSES = [STROMSTAD_GK, DROBAK_GK, MOSS_RYGGE_GK];
 
 export function getCourseById(id) {
   return ALL_COURSES.find(c => c.id === id) || null;

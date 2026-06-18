@@ -7,7 +7,7 @@ import ScoreInput from '../components/ScoreInput';
 import ClosestToPinSelector from '../components/ClosestToPinSelector';
 import Scorecard from '../components/Scorecard';
 import { updateGame, saveHoleScores } from '../firebase/gameService';
-import { getTeamBestNet, getHoleResult, computeMatchScore, getMatchStatus, getMatchplayStrokes } from '../utils/scoring';
+import { getTeamBestNet, getHoleResult, computeMatchScore, getMatchStatus, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
 import { ChevronLeftIcon, ChevronRightIcon } from '../components/GolfIcon';
 
 // ===== LOBBY =====
@@ -187,11 +187,12 @@ function HoleScoringView({ game, scores, course, gameCode }) {
     };
   }
 
-  const holeResult = getHoleResult(effectiveScores, game.teams, hole);
+  const adjTeams = adjustTeamsForCourse(game.teams, course);
+  const holeResult = getHoleResult(effectiveScores, adjTeams, hole);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <MatchStatusBar scores={allHoleScores} teams={game.teams} courseHoles={course.holes} />
+      <MatchStatusBar scores={allHoleScores} teams={adjTeams} courseHoles={course.holes} />
 
       <div className="tabs" style={{ margin: '0', padding: '0 16px' }}>
         <button
@@ -261,9 +262,9 @@ function HoleScoringView({ game, scores, course, gameCode }) {
 
             {/* Team score sections */}
             {(() => {
-              const allPlayers = game.teams.flatMap(t => t.players);
+              const allPlayers = adjTeams.flatMap(t => t.players);
               const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
-              return game.teams.map((team, ti) => {
+              return adjTeams.map((team, ti) => {
                 const teamScores = effectiveScores[`team${ti}`] || {};
                 const bestNet = getTeamBestNet(teamScores, team.players, hole);
                 return (

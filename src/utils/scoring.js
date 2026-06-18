@@ -9,6 +9,22 @@ export function getStrokesOnHole(handicap, strokeIndex) {
   return 0;
 }
 
+// WHS Course Handicap: HCI adjusted for a specific course's slope and rating
+export function getCourseHandicap(hci, slopeRating, courseRating, par) {
+  return Math.round(hci * (slopeRating / 113) + (courseRating - par));
+}
+
+// Return a copy of teams with handicaps converted to Course Handicap for a given course
+export function adjustTeamsForCourse(teams, course) {
+  return teams.map(team => ({
+    ...team,
+    players: team.players.map(p => ({
+      ...p,
+      handicap: getCourseHandicap(p.handicap, course.slopeRating, course.courseRating, course.par),
+    })),
+  }));
+}
+
 // Strokes a player receives relative to the lowest-handicap player (matchplay context)
 export function getMatchplayStrokes(playerHandicap, minHandicap, strokeIndex) {
   return getStrokesOnHole(Math.max(0, playerHandicap - minHandicap), strokeIndex);

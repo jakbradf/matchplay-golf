@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Stepper from '../components/Stepper';
 import { ALL_COURSES } from '../data/courses';
 import { createGame } from '../firebase/gameService';
+import { getCourseHandicap } from '../utils/scoring';
 import { ShareIcon, CloseIcon } from '../components/GolfIcon';
 
 // ========== STEP 1: Course Selection ==========
@@ -91,7 +92,7 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
       if (!team.name.trim()) errs[`team${ti}name`] = 'Required';
       team.players.forEach((p, pi) => {
         if (!p.name.trim()) errs[`t${ti}p${pi}name`] = 'Required';
-        const hcp = parseInt(p.handicap, 10);
+        const hcp = parseFloat(p.handicap);
         if (isNaN(hcp) || hcp < 0 || hcp > 54) errs[`t${ti}p${pi}hcp`] = '0–54';
       });
     });
@@ -145,16 +146,17 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
                     )}
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">HCP</label>
+                    <label className="form-label">HCP Index</label>
                     <input
                       className={`form-input form-input-sm${errors[`t${ti}p${pi}hcp`] ? ' error' : ''}`}
                       value={player.handicap}
                       onChange={(e) => updatePlayer(ti, pi, 'handicap', e.target.value)}
-                      placeholder="0"
+                      placeholder="0.0"
                       type="number"
                       min="0"
                       max="54"
-                      inputMode="numeric"
+                      step="0.1"
+                      inputMode="decimal"
                     />
                     {errors[`t${ti}p${pi}hcp`] && (
                       <p className="form-error">{errors[`t${ti}p${pi}hcp`]}</p>
@@ -224,7 +226,9 @@ function StepConfirm({ course, teams, onConfirm, onBack, loading }) {
           {team.players.map((p, pi) => (
             <div className="confirm-row" key={pi}>
               <span className="confirm-label">{p.name}</span>
-              <span className="confirm-value">HCP {p.handicap}</span>
+              <span className="confirm-value">
+                Index {p.handicap} → Course HCP {getCourseHandicap(parseFloat(p.handicap), course.slopeRating, course.courseRating, course.par)}
+              </span>
             </div>
           ))}
         </div>
@@ -337,7 +341,7 @@ export default function CreateGame() {
         name: team.name.trim(),
         players: team.players.map((p) => ({
           name: p.name.trim(),
-          handicap: parseInt(p.handicap, 10),
+          handicap: parseFloat(p.handicap),
         })),
       }));
       const { code } = await createGame({ course, teams: normalizedTeams });

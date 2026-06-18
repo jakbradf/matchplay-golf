@@ -1,4 +1,4 @@
-import { buildScorecardData, computeMatchScore, getMatchplayStrokes } from '../utils/scoring';
+import { buildScorecardData, computeMatchScore, getMatchplayStrokes, adjustTeamsForCourse, getCourseHandicap } from '../utils/scoring';
 
 function ResultCell({ result, teamIndex }) {
   if (!result) return <td className="result-halved">-</td>;
@@ -21,10 +21,11 @@ function GrossCell({ gross, hasMatchplayStroke }) {
 }
 
 export default function Scorecard({ scores, teams, course }) {
-  const data = buildScorecardData(scores, teams, course.holes);
-  const [t0total, t1total] = computeMatchScore(scores, teams, course.holes);
+  const adjTeams = adjustTeamsForCourse(teams, course);
+  const data = buildScorecardData(scores, adjTeams, course.holes);
+  const [t0total, t1total] = computeMatchScore(scores, adjTeams, course.holes);
 
-  const allPlayers = [...teams[0].players, ...teams[1].players];
+  const allPlayers = [...adjTeams[0].players, ...adjTeams[1].players];
   const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
 
   const front = data.filter(d => d.hole.number <= 9);
@@ -58,14 +59,14 @@ export default function Scorecard({ scores, teams, course }) {
               <th className="col-fixed">Par</th>
               <th className="col-fixed">SI</th>
               {teams[0].players.map((p, i) => (
-                <th key={i} className="col-player" title={`${p.name} — HCP ${p.handicap}`}>
+                <th key={i} className="col-player" title={`${p.name} — HCP Index ${p.handicap} → Course HCP ${adjTeams[0].players[i].handicap}`}>
                   {initials(p.name)}
                 </th>
               ))}
               <th className="col-fixed">Net</th>
               <th className="col-fixed">Res</th>
               {teams[1].players.map((p, i) => (
-                <th key={i} className="col-player" title={`${p.name} — HCP ${p.handicap}`}>
+                <th key={i} className="col-player" title={`${p.name} — HCP Index ${p.handicap} → Course HCP ${adjTeams[1].players[i].handicap}`}>
                   {initials(p.name)}
                 </th>
               ))}
@@ -87,7 +88,7 @@ export default function Scorecard({ scores, teams, course }) {
                 <td className="col-hole">{hole.number}</td>
                 <td>{hole.par}</td>
                 <td className="col-si">{hole.strokeIndex}</td>
-                {teams[0].players.map((p, i) => (
+                {adjTeams[0].players.map((p, i) => (
                   <GrossCell
                     key={i}
                     gross={holeScores?.team0?.[`player${i}gross`] ?? null}
@@ -98,7 +99,7 @@ export default function Scorecard({ scores, teams, course }) {
                   {team0nets.some(n => n !== null) ? Math.min(...team0nets.filter(n => n !== null)) : '—'}
                 </td>
                 <ResultCell result={result} teamIndex={0} />
-                {teams[1].players.map((p, i) => (
+                {adjTeams[1].players.map((p, i) => (
                   <GrossCell
                     key={i}
                     gross={holeScores?.team1?.[`player${i}gross`] ?? null}
@@ -153,6 +154,7 @@ export default function Scorecard({ scores, teams, course }) {
 
       <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)', textAlign: 'center', marginTop: 8 }}>
         ○ = matchplay stroke vs best player · W=Win, L=Loss, H=Halved
+        <br />Course HCP = HCP Index × {course.slopeRating}/113 + ({course.courseRating}−{course.par}) · Slope {course.slopeRating} / CR {course.courseRating}
       </div>
     </div>
   );

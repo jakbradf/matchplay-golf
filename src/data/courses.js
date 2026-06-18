@@ -3,6 +3,8 @@ export const STROMSTAD_GK = {
   name: 'Strömstads Golfklubb',
   location: 'Strömstad, Sweden',
   par: 71,
+  courseRating: 69.3,
+  slopeRating: 119,
   holes: [
     { number: 1,  par: 4, strokeIndex: 9,  distance: 316, isParThree: false },
     { number: 2,  par: 4, strokeIndex: 13, distance: 275, isParThree: false },
@@ -30,6 +32,8 @@ export const DROBAK_GK = {
   name: 'Drøbak Golfklubb',
   location: 'Drøbak, Norway',
   par: 70,
+  courseRating: 67.5,
+  slopeRating: 124,
   holes: [
     { number: 1,  par: 4, strokeIndex: 17, distance: 263, isParThree: false },
     { number: 2,  par: 4, strokeIndex: 5,  distance: 330, isParThree: false },
@@ -57,6 +61,8 @@ export const MOSS_RYGGE_GK = {
   name: 'Moss og Rygge Golfklubb',
   location: 'Moss, Norway',
   par: 72,
+  courseRating: 72.9,
+  slopeRating: 136,
   holes: [
     { number: 1,  par: 5, strokeIndex: 13, distance: 484, isParThree: false },
     { number: 2,  par: 4, strokeIndex: 9,  distance: 333, isParThree: false },

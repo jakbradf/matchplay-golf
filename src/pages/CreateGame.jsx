@@ -8,7 +8,7 @@ import { getCourseHandicap } from '../utils/scoring';
 import { ShareIcon, CloseIcon } from '../components/GolfIcon';
 
 // ========== STEP 1: Course Selection ==========
-function StepCourse({ selected, onSelect, onNext }) {
+function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext }) {
   return (
     <div className="page">
       <p className="section-title-sm">Select Course</p>
@@ -17,7 +17,7 @@ function StepCourse({ selected, onSelect, onNext }) {
           <button
             key={course.id}
             className={`course-card${selected?.id === course.id ? ' selected' : ''}`}
-            onClick={() => onSelect(course)}
+            onClick={() => { onSelect(course); onSelectTee(null); }}
           >
             <div className="course-card-name">{course.name}</div>
             <div className="course-card-location">{course.location}</div>
@@ -29,11 +29,29 @@ function StepCourse({ selected, onSelect, onNext }) {
         ))}
       </div>
 
+      {selected?.tees && (
+        <div style={{ marginTop: 16 }}>
+          <p className="section-title-sm">Select Tees</p>
+          <div className="tee-selector">
+            {selected.tees.map((tee) => (
+              <button
+                key={tee.name}
+                className={`tee-btn${selectedTee?.name === tee.name ? ' active' : ''}`}
+                onClick={() => onSelectTee(tee)}
+              >
+                <span className="tee-btn-name">{tee.name}</span>
+                <span className="tee-btn-stats">CR {tee.courseRating} · S {tee.slopeRating}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div style={{ marginTop: 24 }}>
         <button
           className="btn btn-primary btn-full"
           onClick={onNext}
-          disabled={!selected}
+          disabled={!selected || (selected.tees && !selectedTee)}
         >
           Continue
         </button>
@@ -201,7 +219,7 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
 }
 
 // ========== STEP 3: Confirm ==========
-function StepConfirm({ course, teams, onConfirm, onBack, loading }) {
+function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading }) {
   return (
     <div className="page">
       <div className="card">
@@ -218,6 +236,12 @@ function StepConfirm({ course, teams, onConfirm, onBack, loading }) {
           <span className="confirm-label">Par</span>
           <span className="confirm-value">{course.par}</span>
         </div>
+        {selectedTee && (
+          <div className="confirm-row">
+            <span className="confirm-label">Tees</span>
+            <span className="confirm-value">{selectedTee.name} (CR {selectedTee.courseRating} / Slope {selectedTee.slopeRating})</span>
+          </div>
+        )}
       </div>
 
       {teams.map((team, ti) => (
@@ -326,16 +350,26 @@ export default function CreateGame() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [course, setCourse] = useState(null);
+  const [selectedTee, setSelectedTee] = useState(null);
   const [teams, setTeams] = useState([makeTeam(1), makeTeam(2)]);
   const [gameCode, setGameCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const effectiveCourse = course && selectedTee
+    ? {
+        ...course,
+        courseRating: selectedTee.courseRating,
+        slopeRating: selectedTee.slopeRating,
+        par: selectedTee.par,
+        holes: course.holes.map((h, i) => ({ ...h, distance: selectedTee.distances[i] })),
+      }
+    : course;
+
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Normalize handicaps to integers
       const normalizedTeams = teams.map((team) => ({
         ...team,
         name: team.name.trim(),
@@ -344,7 +378,7 @@ export default function CreateGame() {
           handicap: parseFloat(p.handicap),
         })),
       }));
-      const { code } = await createGame({ course, teams: normalizedTeams });
+      const { code } = await createGame({ course: effectiveCourse, teams: normalizedTeams });
       setGameCode(code);
       setStep(4);
     } catch (err) {
@@ -377,7 +411,9 @@ export default function CreateGame() {
       {step === 1 && (
         <StepCourse
           selected={course}
+          selectedTee={selectedTee}
           onSelect={setCourse}
+          onSelectTee={setSelectedTee}
           onNext={() => setStep(2)}
         />
       )}
@@ -391,7 +427,8 @@ export default function CreateGame() {
       )}
       {step === 3 && (
         <StepConfirm
-          course={course}
+          course={effectiveCourse}
+          selectedTee={selectedTee}
           teams={teams}
           onConfirm={handleConfirm}
           onBack={() => setStep(2)}

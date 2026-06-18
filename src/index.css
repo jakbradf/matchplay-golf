@@ -411,6 +411,52 @@ body {
   font-weight: 700;
 }
 
+/* ===== TEE SELECTOR ===== */
+.tee-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tee-btn {
+  flex: 1 1 calc(33% - 8px);
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px;
+  border: 1.5px solid var(--grey-300);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  cursor: pointer;
+  gap: 3px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tee-btn.active {
+  border-color: var(--green-dark);
+  background: var(--green-light);
+}
+
+.tee-btn-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--grey-900);
+}
+
+.tee-btn.active .tee-btn-name {
+  color: var(--green-dark);
+}
+
+.tee-btn-stats {
+  font-size: 0.6875rem;
+  color: var(--grey-600);
+}
+
+.tee-btn.active .tee-btn-stats {
+  color: var(--green-dark);
+}
+
 /* ===== TEAM SETUP ===== */
 .team-setup {
   display: flex;

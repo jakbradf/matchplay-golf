@@ -63,6 +63,14 @@ export const MOSS_RYGGE_GK = {
   par: 72,
   courseRating: 72.9,
   slopeRating: 136,
+  tees: [
+    { name: 'Black',  courseRating: 74.6, slopeRating: 139, par: 72, distances: [500, 366, 358, 569, 412, 168, 512, 218, 398, 165, 414, 369, 295, 142, 330, 347, 397, 485] },
+    { name: 'White',  courseRating: 72.9, slopeRating: 136, par: 72, distances: [484, 333, 351, 535, 394, 152, 495, 194, 359, 153, 383, 358, 295, 139, 319, 325, 369, 471] },
+    { name: 'Yellow', courseRating: 71.0, slopeRating: 130, par: 72, distances: [454, 321, 318, 524, 381, 141, 447, 179, 352, 142, 370, 308, 278, 114, 310, 317, 359, 400] },
+    { name: 'Blue',   courseRating: 68.8, slopeRating: 128, par: 72, distances: [454, 321, 290, 421, 345, 141, 406, 156, 352, 125, 306, 308, 221, 114, 310, 317, 304, 400] },
+    { name: 'Red',    courseRating: 71.6, slopeRating: 122, par: 72, distances: [383, 278, 290, 421, 345, 115, 406, 156, 269, 125, 306, 283, 221,  92, 239, 273, 304, 391] },
+    { name: 'Gold',   courseRating: 68.8, slopeRating: 118, par: 72, distances: [383, 278, 290, 421, 241, 115, 290, 111, 269,  92, 246, 226, 221,  92, 239, 273, 304, 328] },
+  ],
   holes: [
     { number: 1,  par: 5, strokeIndex: 13, distance: 484, isParThree: false },
     { number: 2,  par: 4, strokeIndex: 9,  distance: 333, isParThree: false },

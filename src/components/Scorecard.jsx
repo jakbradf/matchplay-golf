@@ -1,4 +1,4 @@
-import { buildScorecardData, computeMatchScore } from '../utils/scoring';
+import { buildScorecardData, computeMatchScore, getMatchplayStrokes } from '../utils/scoring';
 
 function ResultCell({ result, teamIndex }) {
   if (!result) return <td className="result-halved">-</td>;
@@ -9,13 +9,28 @@ function ResultCell({ result, teamIndex }) {
   return <td className={`result-win${1 - teamIndex}`}>L</td>;
 }
 
+function GrossCell({ gross, hasMatchplayStroke }) {
+  if (gross == null) return <td>—</td>;
+  return (
+    <td>
+      {hasMatchplayStroke
+        ? <span className="gross-matchplay-circle">{gross}</span>
+        : gross}
+    </td>
+  );
+}
+
 export default function Scorecard({ scores, teams, course }) {
   const data = buildScorecardData(scores, teams, course.holes);
   const [t0total, t1total] = computeMatchScore(scores, teams, course.holes);
 
-  // Split into front/back nine
+  const allPlayers = [...teams[0].players, ...teams[1].players];
+  const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
+
   const front = data.filter(d => d.hole.number <= 9);
   const back = data.filter(d => d.hole.number >= 10);
+
+  const initials = (name) => name.split(' ').map(w => w[0]).join('').toUpperCase();
 
   const renderHalfTable = (rows, label) => {
     const team0pts = rows.reduce((s, d) => s + (d.result?.team0points || 0), 0);
@@ -23,34 +38,47 @@ export default function Scorecard({ scores, teams, course }) {
     const team0extra = rows.reduce((s, d) => s + (d.holeScores?.team0?.extraPoints || 0), 0);
     const team1extra = rows.reduce((s, d) => s + (d.holeScores?.team1?.extraPoints || 0), 0);
 
+    const team0GrossTotals = teams[0].players.map((_, i) => {
+      const scored = rows.filter(({ holeScores }) => holeScores?.team0?.[`player${i}gross`] != null);
+      if (!scored.length) return null;
+      return scored.reduce((sum, { holeScores }) => sum + holeScores.team0[`player${i}gross`], 0);
+    });
+    const team1GrossTotals = teams[1].players.map((_, i) => {
+      const scored = rows.filter(({ holeScores }) => holeScores?.team1?.[`player${i}gross`] != null);
+      if (!scored.length) return null;
+      return scored.reduce((sum, { holeScores }) => sum + holeScores.team1[`player${i}gross`], 0);
+    });
+
     return (
-      <div className="scorecard-wrapper" style={{ marginBottom: 12 }}>
+      <div className="scorecard-wrapper">
         <table className="scorecard-table">
           <thead>
             <tr>
-              <th>Hole</th>
-              <th>Par</th>
-              <th>SI</th>
+              <th className="col-fixed">H</th>
+              <th className="col-fixed">Par</th>
+              <th className="col-fixed">SI</th>
               {teams[0].players.map((p, i) => (
-                <th key={i} title={`HCP: ${p.handicap}`}>
-                  {p.name.split(' ')[0]}
+                <th key={i} className="col-player" title={`${p.name} — HCP ${p.handicap}`}>
+                  {initials(p.name)}
                 </th>
               ))}
-              <th>Net</th>
-              <th>Res</th>
+              <th className="col-fixed">Net</th>
+              <th className="col-fixed">Res</th>
               {teams[1].players.map((p, i) => (
-                <th key={i} title={`HCP: ${p.handicap}`}>
-                  {p.name.split(' ')[0]}
+                <th key={i} className="col-player" title={`${p.name} — HCP ${p.handicap}`}>
+                  {initials(p.name)}
                 </th>
               ))}
-              <th>Net</th>
-              <th>Res</th>
+              <th className="col-fixed">Net</th>
+              <th className="col-fixed">Res</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colSpan={3 + teams[0].players.length + teams[1].players.length + 4}
-                style={{ background: 'var(--grey-100)', fontWeight: 700, fontSize: '0.75rem', color: 'var(--grey-600)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              <td
+                colSpan={3 + teams[0].players.length + teams[1].players.length + 4}
+                className="scorecard-section-header"
+              >
                 {label} — {teams[0].name} vs {teams[1].name}
               </td>
             </tr>
@@ -58,18 +86,26 @@ export default function Scorecard({ scores, teams, course }) {
               <tr key={hole.number}>
                 <td className="col-hole">{hole.number}</td>
                 <td>{hole.par}</td>
-                <td style={{ color: 'var(--grey-500)' }}>{hole.strokeIndex}</td>
+                <td className="col-si">{hole.strokeIndex}</td>
                 {teams[0].players.map((p, i) => (
-                  <td key={i}>{holeScores?.team0?.[`player${i}gross`] ?? '—'}</td>
+                  <GrossCell
+                    key={i}
+                    gross={holeScores?.team0?.[`player${i}gross`] ?? null}
+                    hasMatchplayStroke={getMatchplayStrokes(p.handicap, minHandicap, hole.strokeIndex) > 0}
+                  />
                 ))}
-                <td style={{ fontWeight: 600 }}>
+                <td className="col-net">
                   {team0nets.some(n => n !== null) ? Math.min(...team0nets.filter(n => n !== null)) : '—'}
                 </td>
                 <ResultCell result={result} teamIndex={0} />
                 {teams[1].players.map((p, i) => (
-                  <td key={i}>{holeScores?.team1?.[`player${i}gross`] ?? '—'}</td>
+                  <GrossCell
+                    key={i}
+                    gross={holeScores?.team1?.[`player${i}gross`] ?? null}
+                    hasMatchplayStroke={getMatchplayStrokes(p.handicap, minHandicap, hole.strokeIndex) > 0}
+                  />
                 ))}
-                <td style={{ fontWeight: 600 }}>
+                <td className="col-net">
                   {team1nets.some(n => n !== null) ? Math.min(...team1nets.filter(n => n !== null)) : '—'}
                 </td>
                 <ResultCell result={result} teamIndex={1} />
@@ -77,12 +113,16 @@ export default function Scorecard({ scores, teams, course }) {
             ))}
             <tr className="scorecard-totals">
               <td colSpan={3}>Total</td>
-              {teams[0].players.map((_, i) => <td key={i} />)}
+              {team0GrossTotals.map((total, i) => (
+                <td key={i}>{total ?? '—'}</td>
+              ))}
               <td />
               <td style={{ color: 'var(--green-dark)' }}>
                 {team0pts}pts{team0extra > 0 ? ` +${team0extra}⭐` : ''}
               </td>
-              {teams[1].players.map((_, i) => <td key={i} />)}
+              {team1GrossTotals.map((total, i) => (
+                <td key={i}>{total ?? '—'}</td>
+              ))}
               <td />
               <td style={{ color: 'var(--green-dark)' }}>
                 {team1pts}pts{team1extra > 0 ? ` +${team1extra}⭐` : ''}
@@ -99,7 +139,6 @@ export default function Scorecard({ scores, teams, course }) {
       {renderHalfTable(front, 'Front 9')}
       {renderHalfTable(back, 'Back 9')}
 
-      {/* Overall summary */}
       <div className="match-summary">
         <div className="summary-team">
           <div className="summary-team-name">{teams[0].name}</div>
@@ -113,7 +152,7 @@ export default function Scorecard({ scores, teams, course }) {
       </div>
 
       <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)', textAlign: 'center', marginTop: 8 }}>
-        HCP shown as column header tooltip · W=Win, L=Loss, H=Halved
+        ○ = matchplay stroke vs best player · W=Win, L=Loss, H=Halved
       </div>
     </div>
   );

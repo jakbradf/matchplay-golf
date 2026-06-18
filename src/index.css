@@ -687,6 +687,13 @@ body {
   text-overflow: ellipsis;
 }
 
+.stroke-indicators-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .stroke-dots {
   display: flex;
   gap: 3px;
@@ -699,6 +706,14 @@ body {
   border-radius: 50%;
   background: var(--gold);
   border: 1px solid #b8962e;
+}
+
+.stroke-dot-ring {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid var(--green-dark);
 }
 
 .score-net-badge {
@@ -894,25 +909,26 @@ body {
 
 /* ===== SCORECARD TABLE ===== */
 .scorecard-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
   border: 1px solid var(--grey-200);
   margin-bottom: 16px;
+  overflow: hidden;
 }
 
 .scorecard-table {
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: clamp(0.6rem, 2.5vw, 0.8125rem);
   width: 100%;
-  min-width: 400px;
+  table-layout: fixed;
 }
 
 .scorecard-table th,
 .scorecard-table td {
-  padding: 7px 6px;
+  padding: clamp(3px, 1vw, 7px) clamp(2px, 0.8vw, 5px);
   text-align: center;
   border-bottom: 1px solid var(--grey-200);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -920,7 +936,6 @@ body {
   background: var(--green-dark);
   color: var(--white);
   font-weight: 700;
-  font-size: 0.75rem;
   letter-spacing: 0.02em;
 }
 
@@ -935,6 +950,24 @@ body {
 .scorecard-table .col-hole {
   font-weight: 700;
   background: var(--grey-100);
+  width: 1.8em;
+}
+
+.scorecard-table .col-fixed {
+  width: 2em;
+}
+
+.scorecard-table .col-si {
+  color: var(--grey-500);
+  width: 1.8em;
+}
+
+.scorecard-table .col-net {
+  font-weight: 600;
+}
+
+.scorecard-table .col-player {
+  width: 2.2em;
 }
 
 .scorecard-table .result-win0 {
@@ -957,12 +990,28 @@ body {
   background: var(--grey-200) !important;
   font-weight: 700 !important;
   color: var(--grey-700) !important;
+  font-size: 0.65rem !important;
+  text-align: left !important;
+  padding-left: 8px !important;
 }
 
 .scorecard-totals td {
   background: var(--green-pale) !important;
   font-weight: 700 !important;
   border-top: 2px solid var(--green-dark) !important;
+}
+
+/* Circled gross score = player has a matchplay handicap stroke on this hole */
+.gross-matchplay-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  border: 1.5px solid var(--green-dark);
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* ===== RESULTS PAGE ===== */

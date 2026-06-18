@@ -9,6 +9,11 @@ export function getStrokesOnHole(handicap, strokeIndex) {
   return 0;
 }
 
+// Strokes a player receives relative to the lowest-handicap player (matchplay context)
+export function getMatchplayStrokes(playerHandicap, minHandicap, strokeIndex) {
+  return getStrokesOnHole(Math.max(0, playerHandicap - minHandicap), strokeIndex);
+}
+
 // Calculate net score
 export function getNetScore(gross, handicap, strokeIndex) {
   return gross - getStrokesOnHole(handicap, strokeIndex);

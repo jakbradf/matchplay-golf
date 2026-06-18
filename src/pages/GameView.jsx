@@ -7,7 +7,7 @@ import ScoreInput from '../components/ScoreInput';
 import ClosestToPinSelector from '../components/ClosestToPinSelector';
 import Scorecard from '../components/Scorecard';
 import { updateGame, saveHoleScores } from '../firebase/gameService';
-import { getTeamBestNet, getHoleResult, computeMatchScore, getMatchStatus } from '../utils/scoring';
+import { getTeamBestNet, getHoleResult, computeMatchScore, getMatchStatus, getMatchplayStrokes } from '../utils/scoring';
 import { ChevronLeftIcon, ChevronRightIcon } from '../components/GolfIcon';
 
 // ===== LOBBY =====
@@ -260,30 +260,35 @@ function HoleScoringView({ game, scores, course, gameCode }) {
             )}
 
             {/* Team score sections */}
-            {game.teams.map((team, ti) => {
-              const teamScores = effectiveScores[`team${ti}`] || {};
-              const bestNet = getTeamBestNet(teamScores, team.players, hole);
-              return (
-                <div key={ti} className="team-scoring-section">
-                  <div className="team-scoring-header">
-                    <span className="team-scoring-name">{team.name}</span>
-                    {bestNet !== Infinity && (
-                      <span className="team-best-net">Best net: {bestNet}</span>
-                    )}
+            {(() => {
+              const allPlayers = game.teams.flatMap(t => t.players);
+              const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
+              return game.teams.map((team, ti) => {
+                const teamScores = effectiveScores[`team${ti}`] || {};
+                const bestNet = getTeamBestNet(teamScores, team.players, hole);
+                return (
+                  <div key={ti} className="team-scoring-section">
+                    <div className="team-scoring-header">
+                      <span className="team-scoring-name">{team.name}</span>
+                      {bestNet !== Infinity && (
+                        <span className="team-best-net">Best net: {bestNet}</span>
+                      )}
+                    </div>
+                    {team.players.map((player, pi) => (
+                      <ScoreInput
+                        key={pi}
+                        player={player}
+                        playerIndex={pi}
+                        hole={hole}
+                        gross={teamScores[`player${pi}gross`] ?? null}
+                        onChange={(val) => handleScoreChange(ti, pi, val)}
+                        matchplayStrokes={getMatchplayStrokes(player.handicap, minHandicap, hole.strokeIndex)}
+                      />
+                    ))}
                   </div>
-                  {team.players.map((player, pi) => (
-                    <ScoreInput
-                      key={pi}
-                      player={player}
-                      playerIndex={pi}
-                      hole={hole}
-                      gross={teamScores[`player${pi}gross`] ?? null}
-                      onChange={(val) => handleScoreChange(ti, pi, val)}
-                    />
-                  ))}
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
 
             {/* Extra points */}
             <div className="extra-points">

@@ -1,6 +1,6 @@
 import { getStrokesOnHole, getNetScore } from '../utils/scoring';
 
-export default function ScoreInput({ player, playerIndex, hole, gross, onChange }) {
+export default function ScoreInput({ player, playerIndex, hole, gross, onChange, matchplayStrokes = 0 }) {
   const strokes = getStrokesOnHole(player.handicap, hole.strokeIndex);
   const net = gross != null ? getNetScore(gross, player.handicap, hole.strokeIndex) : null;
 
@@ -24,13 +24,22 @@ export default function ScoreInput({ player, playerIndex, hole, gross, onChange 
     <div className="player-score-row">
       <div className="player-score-info">
         <div className="player-score-name">{player.name}</div>
-        {strokes > 0 && (
-          <div className="stroke-dots">
-            {Array.from({ length: strokes }).map((_, i) => (
-              <div key={i} className="stroke-dot" title={`+${strokes} stroke${strokes > 1 ? 's' : ''}`} />
-            ))}
-          </div>
-        )}
+        <div className="stroke-indicators-row">
+          {strokes > 0 && (
+            <div className="stroke-dots" title={`+${strokes} stroke${strokes > 1 ? 's' : ''} (HCP ${player.handicap})`}>
+              {Array.from({ length: strokes }).map((_, i) => (
+                <div key={i} className="stroke-dot" />
+              ))}
+            </div>
+          )}
+          {matchplayStrokes > 0 && (
+            <div className="stroke-dots" title={`+${matchplayStrokes} matchplay stroke${matchplayStrokes > 1 ? 's' : ''} vs best player`}>
+              {Array.from({ length: matchplayStrokes }).map((_, i) => (
+                <div key={i} className="stroke-dot-ring" />
+              ))}
+            </div>
+          )}
+        </div>
         {gross != null && (
           <div className="score-net-badge">
             Net: {net} {net < hole.par ? '▼' : net === hole.par ? '=' : '▲'}

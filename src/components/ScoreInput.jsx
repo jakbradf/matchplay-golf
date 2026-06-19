@@ -1,8 +1,8 @@
-import { getStrokesOnHole, getNetScore } from '../utils/scoring';
+import { getStrokesOnHole } from '../utils/scoring';
 
 export default function ScoreInput({ player, playerIndex, hole, gross, onChange, matchplayStrokes = 0 }) {
   const strokes = getStrokesOnHole(player.handicap, hole.strokeIndex);
-  const net = gross != null ? getNetScore(gross, player.handicap, hole.strokeIndex) : null;
+  const net = gross != null ? gross - matchplayStrokes : null;
 
   const decrement = () => {
     if (gross == null) {

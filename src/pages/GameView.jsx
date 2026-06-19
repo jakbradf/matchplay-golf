@@ -266,7 +266,7 @@ function HoleScoringView({ game, scores, course, gameCode }) {
               const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
               return adjTeams.map((team, ti) => {
                 const teamScores = effectiveScores[`team${ti}`] || {};
-                const bestNet = getTeamBestNet(teamScores, team.players, hole);
+                const bestNet = getTeamBestNet(teamScores, team.players, hole, minHandicap);
                 return (
                   <div key={ti} className="team-scoring-section">
                     <div className="team-scoring-header">

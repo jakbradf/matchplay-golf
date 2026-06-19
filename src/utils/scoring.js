@@ -35,13 +35,15 @@ export function getNetScore(gross, handicap, strokeIndex) {
   return gross - getStrokesOnHole(handicap, strokeIndex);
 }
 
-// Get best net score from a team on a hole
-export function getTeamBestNet(teamScores, teamPlayers, hole) {
+// Get best matchplay net score from a team on a hole
+// minHandicap: lowest handicap among all 4 players — strokes are relative to this baseline
+export function getTeamBestNet(teamScores, teamPlayers, hole, minHandicap = 0) {
   if (!teamScores || !teamPlayers) return Infinity;
   const nets = teamPlayers.map((player, i) => {
     const gross = teamScores[`player${i}gross`];
     if (gross === null || gross === undefined) return Infinity;
-    return getNetScore(gross, player.handicap, hole.strokeIndex);
+    const relativeHandicap = Math.max(0, player.handicap - minHandicap);
+    return gross - getStrokesOnHole(relativeHandicap, hole.strokeIndex);
   });
   return Math.min(...nets);
 }
@@ -51,8 +53,11 @@ export function getTeamBestNet(teamScores, teamPlayers, hole) {
 export function getHoleResult(holeScores, teams, hole) {
   if (!holeScores) return null;
 
-  const net0 = getTeamBestNet(holeScores.team0, teams[0].players, hole);
-  const net1 = getTeamBestNet(holeScores.team1, teams[1].players, hole);
+  const allPlayers = [...teams[0].players, ...teams[1].players];
+  const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
+
+  const net0 = getTeamBestNet(holeScores.team0, teams[0].players, hole, minHandicap);
+  const net1 = getTeamBestNet(holeScores.team1, teams[1].players, hole, minHandicap);
 
   if (net0 === Infinity || net1 === Infinity) return null; // incomplete
 
@@ -120,6 +125,9 @@ export function computeMatchScore(allHoleScores, teams, courseHoles) {
 
 // Get detailed per-hole results for the scorecard
 export function buildScorecardData(allHoleScores, teams, courseHoles) {
+  const allPlayers = [...teams[0].players, ...teams[1].players];
+  const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
+
   return courseHoles.map((hole) => {
     const holeScores = allHoleScores[String(hole.number)];
     const result = getHoleResult(holeScores, teams, hole);
@@ -127,13 +135,13 @@ export function buildScorecardData(allHoleScores, teams, courseHoles) {
     const team0nets = teams[0].players.map((p, i) => {
       const gross = holeScores?.team0?.[`player${i}gross`];
       if (gross == null) return null;
-      return getNetScore(gross, p.handicap, hole.strokeIndex);
+      return gross - getStrokesOnHole(Math.max(0, p.handicap - minHandicap), hole.strokeIndex);
     });
 
     const team1nets = teams[1].players.map((p, i) => {
       const gross = holeScores?.team1?.[`player${i}gross`];
       if (gross == null) return null;
-      return getNetScore(gross, p.handicap, hole.strokeIndex);
+      return gross - getStrokesOnHole(Math.max(0, p.handicap - minHandicap), hole.strokeIndex);
     });
 
     return {

@@ -33,7 +33,7 @@ export const DROBAK_GK = {
   location: 'Drøbak, Norway',
   par: 70,
   courseRating: 67.5,
-  slopeRating: 124,
+  slopeRating: 125,
   holes: [
     { number: 1,  par: 4, strokeIndex: 17, distance: 263, isParThree: false },
     { number: 2,  par: 4, strokeIndex: 5,  distance: 330, isParThree: false },

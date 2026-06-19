@@ -1060,6 +1060,17 @@ body {
   line-height: 1;
 }
 
+/* ===== LIVE BADGE ===== */
+.live-badge {
+  background: #e53935;
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
 /* ===== RESULTS PAGE ===== */
 .results-banner {
   background: var(--green-dark);

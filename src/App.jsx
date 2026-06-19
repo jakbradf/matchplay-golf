@@ -4,6 +4,7 @@ import CreateGame from './pages/CreateGame';
 import JoinGame from './pages/JoinGame';
 import GameView from './pages/GameView';
 import Results from './pages/Results';
+import WatchGame from './pages/WatchGame';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/join" element={<JoinGame />} />
         <Route path="/game/:code" element={<GameView />} />
         <Route path="/game/:code/results" element={<Results />} />
+        <Route path="/game/:code/watch" element={<WatchGame />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

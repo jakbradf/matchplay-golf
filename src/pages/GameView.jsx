@@ -444,9 +444,36 @@ export default function GameView() {
       ? `Hole ${game.currentHole} — ${course.name.split(' ')[0]}`
       : 'Scoring';
 
+  const watchUrl = `${window.location.origin}/game/${code}/watch`;
+  const shareWatch = () => {
+    if (navigator.share) {
+      navigator.share({ title: 'Live golf scores', url: watchUrl }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(watchUrl);
+    }
+  };
+
+  const shareBtn = game.status === 'active' ? (
+    <button
+      onClick={shareWatch}
+      style={{
+        background: 'rgba(255,255,255,0.18)',
+        border: '1px solid rgba(255,255,255,0.4)',
+        borderRadius: 'var(--radius-sm)',
+        color: 'white',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        padding: '4px 10px',
+        cursor: 'pointer',
+      }}
+    >
+      Share
+    </button>
+  ) : null;
+
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column' }}>
-      <Header title={title} showBack backTo="/" />
+      <Header title={title} showBack backTo="/" rightElement={shareBtn} />
 
       {game.status === 'lobby' && (
         <LobbyView game={game} gameCode={code} navigate={navigate} />

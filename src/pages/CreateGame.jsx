@@ -404,7 +404,21 @@ export default function CreateGame() {
   const [step, setStep] = useState(1);
   const [course, setCourse] = useState(null);
   const [selectedTee, setSelectedTee] = useState(null);
-  const [teams, setTeams] = useState([makeTeam(1), makeTeam(2)]);
+
+  // Pre-fill the first player slot with the logged-in user's Google profile
+  const initialTeams = () => {
+    const t1 = makeTeam(1);
+    if (user) {
+      t1.players[0] = {
+        name: user.displayName ?? '',
+        handicap: '',
+        photoURL: user.photoURL ?? null,
+      };
+    }
+    return [t1, makeTeam(2)];
+  };
+
+  const [teams, setTeams] = useState(initialTeams);
   const [gameCode, setGameCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -429,6 +443,7 @@ export default function CreateGame() {
         players: team.players.map((p) => ({
           name: p.name.trim(),
           handicap: parseFloat(p.handicap),
+          ...(p.photoURL ? { photoURL: p.photoURL } : {}),
         })),
       }));
       const { code } = await createGame({

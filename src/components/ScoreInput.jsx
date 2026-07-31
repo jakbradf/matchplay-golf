@@ -1,4 +1,5 @@
 import { getStrokesOnHole } from '../utils/scoring';
+import PlayerAvatar from './PlayerAvatar';
 
 export default function ScoreInput({ player, playerIndex, hole, gross, onChange, matchplayStrokes = 0 }) {
   const strokes = getStrokesOnHole(player.handicap, hole.strokeIndex);
@@ -22,7 +23,9 @@ export default function ScoreInput({ player, playerIndex, hole, gross, onChange,
 
   return (
     <div className="player-score-row">
-      <div className="player-score-info">
+      <div className="player-score-info" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <PlayerAvatar name={player.name} photoURL={player.photoURL} size={36} />
+        <div style={{ flex: 1, minWidth: 0 }}>
         <div className="player-score-name">{player.name}</div>
         <div className="stroke-indicators-row">
           {strokes > 0 && (
@@ -45,6 +48,7 @@ export default function ScoreInput({ player, playerIndex, hole, gross, onChange,
             Net: {net} {net < hole.par ? '▼' : net === hole.par ? '=' : '▲'}
           </div>
         )}
+        </div>
       </div>
 
       <div className="score-controls">

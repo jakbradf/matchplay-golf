@@ -1,4 +1,5 @@
 import { buildScorecardData, computeMatchScore, getMatchplayStrokes, adjustTeamsForCourse, getCourseHandicap } from '../utils/scoring';
+import PlayerAvatar from './PlayerAvatar';
 
 function ResultCell({ result, teamIndex }) {
   if (!result) return <td className="result-halved">-</td>;
@@ -31,7 +32,6 @@ export default function Scorecard({ scores, teams, course }) {
   const front = data.filter(d => d.hole.number <= 9);
   const back = data.filter(d => d.hole.number >= 10);
 
-  const initials = (name) => name.split(' ').map(w => w[0]).join('').toUpperCase();
 
   // Count contribution holes per player across all scored holes
   const contributionCounts = [
@@ -74,14 +74,18 @@ export default function Scorecard({ scores, teams, course }) {
               <th className="col-fixed">SI</th>
               {teams[0].players.map((p, i) => (
                 <th key={i} className="col-player" title={`${p.name} — HCP Index ${p.handicap} → Course HCP ${adjTeams[0].players[i].handicap}`}>
-                  {initials(p.name)}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <PlayerAvatar name={p.name} photoURL={p.photoURL} size={24} />
+                  </div>
                 </th>
               ))}
               <th className="col-fixed">Net</th>
               <th className="col-fixed">Res</th>
               {teams[1].players.map((p, i) => (
                 <th key={i} className="col-player" title={`${p.name} — HCP Index ${p.handicap} → Course HCP ${adjTeams[1].players[i].handicap}`}>
-                  {initials(p.name)}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <PlayerAvatar name={p.name} photoURL={p.photoURL} size={24} />
+                  </div>
                 </th>
               ))}
               <th className="col-fixed">Net</th>

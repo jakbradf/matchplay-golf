@@ -8,7 +8,7 @@ import ClosestToPinSelector from '../components/ClosestToPinSelector';
 import Scorecard from '../components/Scorecard';
 import { updateGame, saveHoleScores } from '../firebase/gameService';
 import { getTeamBestNet, getHoleResult, computeMatchScore, getMatchStatus, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
-import { ChevronLeftIcon, ChevronRightIcon } from '../components/GolfIcon';
+import { ChevronLeftIcon, ChevronRightIcon, ShareIcon } from '../components/GolfIcon';
 
 // ===== LOBBY =====
 function LobbyView({ game, gameCode, navigate }) {
@@ -79,7 +79,7 @@ function LobbyView({ game, gameCode, navigate }) {
 }
 
 // ===== HOLE SCORING =====
-function HoleScoringView({ game, scores, course, gameCode }) {
+function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   const [currentHole, setCurrentHole] = useState(game.currentHole || 1);
   const [localScores, setLocalScores] = useState({});
   const [saving, setSaving] = useState(false);
@@ -193,6 +193,17 @@ function HoleScoringView({ game, scores, course, gameCode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <MatchStatusBar scores={allHoleScores} teams={adjTeams} courseHoles={course.holes} />
+
+      {/* In-page share bar — safe from iOS top-bar clipping */}
+      <div className="game-share-bar">
+        <div className="game-share-code">
+          Code: <strong>{gameCode}</strong>
+        </div>
+        <button className="game-share-btn" onClick={onShare}>
+          <ShareIcon size={14} color="var(--green-dark)" />
+          Share
+        </button>
+      </div>
 
       <div className="tabs" style={{ margin: '0', padding: '0 16px' }}>
         <button
@@ -447,33 +458,15 @@ export default function GameView() {
   const watchUrl = `${window.location.origin}/game/${code}/watch`;
   const shareWatch = () => {
     if (navigator.share) {
-      navigator.share({ title: 'Live golf scores', url: watchUrl }).catch(() => {});
+      navigator.share({ title: `Join game ${code} — Live golf scores`, text: `Game code: ${code}`, url: watchUrl }).catch(() => {});
     } else {
       navigator.clipboard?.writeText(watchUrl);
     }
   };
 
-  const shareBtn = game.status === 'active' ? (
-    <button
-      onClick={shareWatch}
-      style={{
-        background: 'rgba(255,255,255,0.18)',
-        border: '1px solid rgba(255,255,255,0.4)',
-        borderRadius: 'var(--radius-sm)',
-        color: 'white',
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        padding: '4px 10px',
-        cursor: 'pointer',
-      }}
-    >
-      Share
-    </button>
-  ) : null;
-
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column' }}>
-      <Header title={title} showBack backTo="/" rightElement={shareBtn} />
+      <Header title={title} showBack backTo="/" />
 
       {game.status === 'lobby' && (
         <LobbyView game={game} gameCode={code} navigate={navigate} />
@@ -485,6 +478,7 @@ export default function GameView() {
           scores={scores}
           course={course}
           gameCode={code}
+          onShare={shareWatch}
         />
       )}
     </div>

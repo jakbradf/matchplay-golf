@@ -83,6 +83,8 @@ body {
   background: var(--green-dark);
   color: var(--white);
   padding: 14px 16px;
+  /* Respect iOS notch/Dynamic Island when running as PWA */
+  padding-top: max(14px, env(safe-area-inset-top));
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1355,4 +1357,545 @@ body {
   .hole-nav {
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
+  .sticky-action-bar {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ===== STICKY ACTION BAR (course selection, hole data) ===== */
+.sticky-action-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--white);
+  border-top: 1px solid var(--grey-200);
+  padding: 12px 16px;
+  z-index: 20;
+}
+
+/* ===== IN-PAGE GAME SHARE BAR ===== */
+.game-share-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--grey-50);
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.game-share-code {
+  font-size: 0.875rem;
+  color: var(--grey-700);
+}
+
+.game-share-code strong {
+  color: var(--green-dark);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+}
+
+.game-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--green-light);
+  border: 1px solid var(--green-mid);
+  border-radius: var(--radius-sm);
+  color: var(--green-dark);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+.game-share-btn:active {
+  opacity: 0.8;
+}
+
+/* ===== USER MENU ===== */
+.home-user-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 0 0;
+  min-height: 40px;
+}
+
+.user-menu-signin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1.5px solid var(--grey-300);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--grey-800);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s;
+}
+
+.user-menu-signin:hover {
+  border-color: var(--grey-500);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-avatar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--grey-300);
+}
+
+.user-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.user-dropdown-name {
+  padding: 10px 14px 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--grey-700);
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-family: var(--font);
+  color: var(--grey-800);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.user-dropdown-item:hover {
+  background: var(--grey-50);
+}
+
+.user-dropdown-signout {
+  color: var(--red);
+}
+
+/* ===== HOME RECENT ROUNDS ===== */
+.home-recent {
+  margin-top: 8px;
+}
+
+.home-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.home-recent-header h3 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--grey-500);
+}
+
+.home-recent-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--green-dark);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 0;
+}
+
+.recent-game-card {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s;
+  margin-bottom: 8px;
+}
+
+.recent-game-card:active {
+  background: var(--grey-50);
+}
+
+.recent-game-course {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--grey-900);
+}
+
+.recent-game-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.recent-game-teams {
+  font-size: 0.8125rem;
+  color: var(--grey-600);
+}
+
+/* ===== GAME STATUS BADGE ===== */
+.game-status-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-lobby {
+  background: var(--grey-100);
+  color: var(--grey-600);
+}
+
+.status-active {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.status-complete {
+  background: var(--gold-light);
+  color: #7a5c00;
+}
+
+/* ===== MY GAMES PAGE ===== */
+.my-game-card {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.12s;
+}
+
+.my-game-card:active {
+  background: var(--grey-50);
+}
+
+.my-game-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.my-game-course {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--grey-900);
+}
+
+.my-game-teams {
+  font-size: 0.875rem;
+  color: var(--grey-700);
+}
+
+.my-game-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.my-game-code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--grey-500);
+  letter-spacing: 0.06em;
+}
+
+.my-game-date {
+  font-size: 0.75rem;
+  color: var(--grey-500);
+}
+
+/* ===== SCORECARD CONTRIBUTION ===== */
+.contributor-cell {
+  background: var(--green-light) !important;
+  font-weight: 700;
+}
+
+.contrib-summary {
+  margin-top: 16px;
+  background: var(--grey-50);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.contrib-summary-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--grey-500);
+  margin-bottom: 10px;
+}
+
+.contrib-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.contrib-team-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contrib-team-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--grey-700);
+  margin-bottom: 2px;
+}
+
+.contrib-player-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contrib-player-name {
+  font-size: 0.75rem;
+  color: var(--grey-700);
+  width: 56px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contrib-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--grey-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.contrib-bar {
+  height: 100%;
+  background: var(--green-mid);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+
+.contrib-count {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  width: 22px;
+  text-align: right;
+}
+
+.contrib-legend {
+  font-size: 0.6875rem;
+  color: var(--grey-500);
+  margin-top: 10px;
+}
+
+/* ===== COURSE SEARCH ===== */
+.course-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--grey-100);
+  border: 1.5px solid var(--grey-300);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+
+.course-search-wrap:focus-within {
+  border-color: var(--green-dark);
+  background: var(--white);
+}
+
+.course-search-input {
+  flex: 1;
+  height: 44px;
+  border: none;
+  background: transparent;
+  font-size: 0.9375rem;
+  font-family: var(--font);
+  color: var(--grey-900);
+  outline: none;
+}
+
+.course-search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.course-custom-badge {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--gold-light);
+  color: #7a5c00;
+  border-radius: var(--radius-full);
+  padding: 2px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.add-course-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1.5px dashed var(--green-mid);
+  border-radius: var(--radius-md);
+  color: var(--green-dark);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-family: var(--font);
+  width: 100%;
+  justify-content: center;
+}
+
+.add-course-link:active {
+  background: var(--green-pale);
+}
+
+/* ===== CUSTOM COURSE BUILDER ===== */
+.course-holes-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0;
+}
+
+.course-holes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.course-holes-table th {
+  text-align: center;
+  padding: 6px 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--grey-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--grey-200);
+}
+
+.course-holes-table th:first-child {
+  text-align: left;
+}
+
+.course-holes-table td {
+  padding: 4px 2px;
+  text-align: center;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.hole-num-cell {
+  text-align: left !important;
+  font-weight: 700;
+  color: var(--grey-700);
+  padding-left: 0 !important;
+}
+
+.hole-select {
+  width: 52px;
+  height: 36px;
+  border: 1.5px solid var(--grey-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: var(--font);
+  color: var(--grey-900);
+  background: var(--white);
+  text-align: center;
+  -webkit-appearance: none;
+}
+
+.hole-input {
+  width: 56px;
+  height: 36px;
+  border: 1.5px solid var(--grey-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: var(--font);
+  color: var(--grey-900);
+  background: var(--white);
+  text-align: center;
+  -webkit-appearance: none;
+  padding: 0 4px;
+}
+
+.hole-input:focus,
+.hole-select:focus {
+  outline: none;
+  border-color: var(--green-dark);
 }

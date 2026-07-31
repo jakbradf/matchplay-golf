@@ -87,3 +87,50 @@ export function CloseIcon({ size = 20, color = 'currentColor' }) {
     </svg>
   );
 }
+
+export function UserIcon({ size = 20, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="7" r="3.5" stroke={color} strokeWidth="1.8"/>
+      <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+export function SearchIcon({ size = 20, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8.5" cy="8.5" r="5" stroke={color} strokeWidth="1.8"/>
+      <path d="M13 13L17 17" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 20, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 4v12M4 10h12" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+export function HistoryIcon({ size = 20, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 10a7 7 0 1 0 7-7 7 7 0 0 0-5 2L3 7" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 4v3h3" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 7v3.5l2.5 2.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+export function GoogleIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.6 10.23c0-.68-.06-1.36-.17-2H10v3.79h5.38a4.6 4.6 0 0 1-1.99 3.02v2.51h3.22c1.89-1.74 2.99-4.3 2.99-7.32z" fill="#4285F4"/>
+      <path d="M10 20c2.7 0 4.96-.9 6.61-2.45l-3.22-2.51c-.9.6-2.04.96-3.39.96-2.6 0-4.81-1.76-5.6-4.12H1.08v2.6A10 10 0 0 0 10 20z" fill="#34A853"/>
+      <path d="M4.4 11.88A5.99 5.99 0 0 1 4.08 10c0-.65.11-1.28.32-1.88V5.52H1.08A10 10 0 0 0 0 10c0 1.62.39 3.15 1.08 4.48l3.32-2.6z" fill="#FBBC05"/>
+      <path d="M10 3.96c1.47 0 2.79.51 3.83 1.5l2.87-2.87C14.96.99 12.7 0 10 0A10 10 0 0 0 1.08 5.52l3.32 2.6C5.19 5.72 7.4 3.96 10 3.96z" fill="#EA4335"/>
+    </svg>
+  );
+}

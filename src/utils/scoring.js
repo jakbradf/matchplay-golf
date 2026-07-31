@@ -123,6 +123,23 @@ export function computeMatchScore(allHoleScores, teams, courseHoles) {
   return [team0total, team1total];
 }
 
+// Returns [[team0ContributorIndices], [team1ContributorIndices]]
+// A player "contributes" on a hole when their net score equals their team's best net.
+export function getHoleContributors(holeScores, teams, hole, minHandicap) {
+  return teams.map((team, ti) => {
+    const teamScores = holeScores?.[`team${ti}`];
+    if (!teamScores) return [];
+    const nets = team.players.map((p, i) => {
+      const gross = teamScores[`player${i}gross`];
+      if (gross == null) return Infinity;
+      return gross - getStrokesOnHole(Math.max(0, p.handicap - minHandicap), hole.strokeIndex);
+    });
+    const best = Math.min(...nets);
+    if (best === Infinity) return [];
+    return nets.reduce((acc, n, i) => (n === best ? [...acc, i] : acc), []);
+  });
+}
+
 // Get detailed per-hole results for the scorecard
 export function buildScorecardData(allHoleScores, teams, courseHoles) {
   const allPlayers = [...teams[0].players, ...teams[1].players];
@@ -131,6 +148,7 @@ export function buildScorecardData(allHoleScores, teams, courseHoles) {
   return courseHoles.map((hole) => {
     const holeScores = allHoleScores[String(hole.number)];
     const result = getHoleResult(holeScores, teams, hole);
+    const contributors = getHoleContributors(holeScores, teams, hole, minHandicap);
 
     const team0nets = teams[0].players.map((p, i) => {
       const gross = holeScores?.team0?.[`player${i}gross`];
@@ -150,6 +168,7 @@ export function buildScorecardData(allHoleScores, teams, courseHoles) {
       result,
       team0nets,
       team1nets,
+      contributors,
     };
   });
 }

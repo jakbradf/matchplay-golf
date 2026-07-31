@@ -1,53 +1,105 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Stepper from '../components/Stepper';
 import { ALL_COURSES } from '../data/courses';
+import { loadPublicCourses } from '../firebase/courseService';
 import { createGame } from '../firebase/gameService';
 import { getCourseHandicap } from '../utils/scoring';
-import { ShareIcon, CloseIcon } from '../components/GolfIcon';
+import { ShareIcon, CloseIcon, SearchIcon, PlusIcon } from '../components/GolfIcon';
+import { useAuth } from '../contexts/AuthContext';
 
 // ========== STEP 1: Course Selection ==========
-function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext }) {
+function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext, onCreateCourse }) {
+  const [search, setSearch] = useState('');
+  const [customCourses, setCustomCourses] = useState([]);
+
+  useEffect(() => {
+    loadPublicCourses().then(setCustomCourses);
+  }, []);
+
+  const allCourses = [...ALL_COURSES, ...customCourses];
+  const filtered = search.trim()
+    ? allCourses.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.location.toLowerCase().includes(search.toLowerCase())
+      )
+    : allCourses;
+
   return (
-    <div className="page">
-      <p className="section-title-sm">Select Course</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {ALL_COURSES.map((course) => (
-          <button
-            key={course.id}
-            className={`course-card${selected?.id === course.id ? ' selected' : ''}`}
-            onClick={() => { onSelect(course); onSelectTee(null); }}
-          >
-            <div className="course-card-name">{course.name}</div>
-            <div className="course-card-location">{course.location}</div>
-            <div className="course-card-stats">
-              <span className="course-stat">Par <span>{course.par}</span></span>
-              <span className="course-stat"><span>{course.holes.length}</span> holes</span>
+    <>
+      <div className="page" style={{ paddingBottom: 0 }}>
+        <p className="section-title-sm">Select Course</p>
+
+        <div className="course-search-wrap">
+          <SearchIcon size={16} color="var(--grey-500)" />
+          <input
+            className="course-search-input"
+            placeholder="Search courses…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className="course-search-clear" onClick={() => setSearch('')} aria-label="Clear search">
+              <CloseIcon size={14} color="var(--grey-500)" />
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {filtered.length === 0 && (
+            <p style={{ color: 'var(--grey-500)', fontSize: '0.9rem', padding: '8px 0' }}>
+              No courses found. Try a different search or add a custom course.
+            </p>
+          )}
+          {filtered.map((course) => (
+            <button
+              key={course.id}
+              className={`course-card${selected?.id === course.id ? ' selected' : ''}`}
+              onClick={() => { onSelect(course); onSelectTee(null); }}
+            >
+              <div className="course-card-name">
+                {course.name}
+                {course.isCustom && <span className="course-custom-badge">Custom</span>}
+              </div>
+              <div className="course-card-location">{course.location}</div>
+              <div className="course-card-stats">
+                <span className="course-stat">Par <span>{course.par}</span></span>
+                <span className="course-stat"><span>{course.holes.length}</span> holes</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {selected?.tees && (
+          <div style={{ marginTop: 16 }}>
+            <p className="section-title-sm">Select Tees</p>
+            <div className="tee-selector">
+              {selected.tees.map((tee) => (
+                <button
+                  key={tee.name}
+                  className={`tee-btn${selectedTee?.name === tee.name ? ' active' : ''}`}
+                  onClick={() => onSelectTee(tee)}
+                >
+                  <span className="tee-btn-name">{tee.name}</span>
+                  <span className="tee-btn-stats">CR {tee.courseRating} · S {tee.slopeRating}</span>
+                </button>
+              ))}
             </div>
-          </button>
-        ))}
+          </div>
+        )}
+
+        <button
+          className="add-course-link"
+          onClick={onCreateCourse}
+          style={{ marginTop: 16, marginBottom: 8 }}
+        >
+          <PlusIcon size={16} color="var(--green-dark)" />
+          Add a custom course
+        </button>
       </div>
 
-      {selected?.tees && (
-        <div style={{ marginTop: 16 }}>
-          <p className="section-title-sm">Select Tees</p>
-          <div className="tee-selector">
-            {selected.tees.map((tee) => (
-              <button
-                key={tee.name}
-                className={`tee-btn${selectedTee?.name === tee.name ? ' active' : ''}`}
-                onClick={() => onSelectTee(tee)}
-              >
-                <span className="tee-btn-name">{tee.name}</span>
-                <span className="tee-btn-stats">CR {tee.courseRating} · S {tee.slopeRating}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div style={{ marginTop: 24 }}>
+      <div className="sticky-action-bar">
         <button
           className="btn btn-primary btn-full"
           onClick={onNext}
@@ -56,7 +108,7 @@ function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext }) {
           Continue
         </button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -348,6 +400,7 @@ function StepShare({ gameCode, onStart }) {
 // ========== MAIN COMPONENT ==========
 export default function CreateGame() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [course, setCourse] = useState(null);
   const [selectedTee, setSelectedTee] = useState(null);
@@ -378,7 +431,11 @@ export default function CreateGame() {
           handicap: parseFloat(p.handicap),
         })),
       }));
-      const { code } = await createGame({ course: effectiveCourse, teams: normalizedTeams });
+      const { code } = await createGame({
+        course: effectiveCourse,
+        teams: normalizedTeams,
+        userId: user?.uid ?? null,
+      });
       setGameCode(code);
       setStep(4);
     } catch (err) {
@@ -415,6 +472,7 @@ export default function CreateGame() {
           onSelect={setCourse}
           onSelectTee={setSelectedTee}
           onNext={() => setStep(2)}
+          onCreateCourse={() => navigate('/create-course')}
         />
       )}
       {step === 2 && (

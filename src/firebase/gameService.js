@@ -6,12 +6,15 @@ import {
   collection,
   onSnapshot,
   serverTimestamp,
+  getDocs,
+  query,
+  where,
 } from 'firebase/firestore';
 import { db } from './config';
 import { generateGameCode } from '../utils/gameCode';
 
 // Create a new game document in Firestore
-export async function createGame({ course, teams }) {
+export async function createGame({ course, teams, userId = null }) {
   let code;
   let exists = true;
 
@@ -32,6 +35,7 @@ export async function createGame({ course, teams }) {
     teams,
     currentHole: 1,
     scorerCode,
+    createdBy: userId,
     createdAt: serverTimestamp(),
   };
 
@@ -83,6 +87,18 @@ export function subscribeToScores(gameCode, callback) {
       scores[d.id] = d.data();
     });
     callback(scores);
+  });
+}
+
+// Fetch all games created by a user, sorted by date descending (client-side)
+export async function getUserGames(uid) {
+  const q = query(collection(db, 'games'), where('createdBy', '==', uid));
+  const snap = await getDocs(q);
+  const games = snap.docs.map(d => ({ ...d.data() }));
+  return games.sort((a, b) => {
+    const ta = a.createdAt?.toMillis?.() ?? 0;
+    const tb = b.createdAt?.toMillis?.() ?? 0;
+    return tb - ta;
   });
 }
 

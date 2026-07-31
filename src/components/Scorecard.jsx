@@ -9,10 +9,10 @@ function ResultCell({ result, teamIndex }) {
   return <td className={`result-win${1 - teamIndex}`}>L</td>;
 }
 
-function GrossCell({ gross, hasMatchplayStroke }) {
+function GrossCell({ gross, hasMatchplayStroke, isContributor }) {
   if (gross == null) return <td>—</td>;
   return (
-    <td>
+    <td className={isContributor ? 'contributor-cell' : ''}>
       {hasMatchplayStroke
         ? <span className="gross-matchplay-circle">{gross}</span>
         : gross}
@@ -32,6 +32,20 @@ export default function Scorecard({ scores, teams, course }) {
   const back = data.filter(d => d.hole.number >= 10);
 
   const initials = (name) => name.split(' ').map(w => w[0]).join('').toUpperCase();
+
+  // Count contribution holes per player across all scored holes
+  const contributionCounts = [
+    adjTeams[0].players.map(() => 0),
+    adjTeams[1].players.map(() => 0),
+  ];
+  data.forEach(({ contributors }) => {
+    if (!contributors) return;
+    contributors.forEach((indices, ti) => {
+      indices.forEach(pi => {
+        contributionCounts[ti][pi]++;
+      });
+    });
+  });
 
   const renderHalfTable = (rows, label) => {
     const team0pts = rows.reduce((s, d) => s + (d.result?.team0points || 0), 0);
@@ -83,7 +97,7 @@ export default function Scorecard({ scores, teams, course }) {
                 {label} — {teams[0].name} vs {teams[1].name}
               </td>
             </tr>
-            {rows.map(({ hole, holeScores, result, team0nets, team1nets }) => (
+            {rows.map(({ hole, holeScores, result, team0nets, team1nets, contributors }) => (
               <tr key={hole.number}>
                 <td className="col-hole">{hole.number}</td>
                 <td>{hole.par}</td>
@@ -93,6 +107,7 @@ export default function Scorecard({ scores, teams, course }) {
                     key={i}
                     gross={holeScores?.team0?.[`player${i}gross`] ?? null}
                     hasMatchplayStroke={getMatchplayStrokes(p.handicap, minHandicap, hole.strokeIndex) > 0}
+                    isContributor={contributors?.[0]?.includes(i) ?? false}
                   />
                 ))}
                 <td className="col-net">
@@ -104,6 +119,7 @@ export default function Scorecard({ scores, teams, course }) {
                     key={i}
                     gross={holeScores?.team1?.[`player${i}gross`] ?? null}
                     hasMatchplayStroke={getMatchplayStrokes(p.handicap, minHandicap, hole.strokeIndex) > 0}
+                    isContributor={contributors?.[1]?.includes(i) ?? false}
                   />
                 ))}
                 <td className="col-net">
@@ -135,6 +151,8 @@ export default function Scorecard({ scores, teams, course }) {
     );
   };
 
+  const holesScored = data.filter(d => d.result !== null).length;
+
   return (
     <div>
       {renderHalfTable(front, 'Front 9')}
@@ -151,6 +169,35 @@ export default function Scorecard({ scores, teams, course }) {
           <div className="summary-points">{t1total}</div>
         </div>
       </div>
+
+      {holesScored > 0 && (
+        <div className="contrib-summary">
+          <div className="contrib-summary-title">Player Contributions</div>
+          <div className="contrib-summary-grid">
+            {[0, 1].map(ti => (
+              <div key={ti} className="contrib-team-col">
+                <div className="contrib-team-name">{teams[ti].name}</div>
+                {teams[ti].players.map((p, pi) => {
+                  const count = contributionCounts[ti][pi];
+                  const pct = holesScored > 0 ? Math.round((count / holesScored) * 100) : 0;
+                  return (
+                    <div key={pi} className="contrib-player-row">
+                      <span className="contrib-player-name">{p.name}</span>
+                      <div className="contrib-bar-wrap">
+                        <div className="contrib-bar" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="contrib-count">{count}h</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+          <div className="contrib-legend">
+            Highlighted cells = player whose score counted for their team on that hole
+          </div>
+        </div>
+      )}
 
       <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)', textAlign: 'center', marginTop: 8 }}>
         ○ = matchplay stroke vs best player · W=Win, L=Loss, H=Halved

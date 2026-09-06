@@ -251,9 +251,9 @@ function StepConfirm({ course, teams, onConfirm, onBack, loading }) {
 }
 
 // ========== STEP 4: Share ==========
-function StepShare({ tournamentCode, onStart }) {
+function TeamShareRow({ tournamentCode, team }) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = `${window.location.origin}/tournament/${tournamentCode}`;
+  const shareUrl = `${window.location.origin}/tournament/${tournamentCode}/team/${team.id}/${team.editToken}`;
 
   const copyLink = async () => {
     try {
@@ -268,7 +268,7 @@ function StepShare({ tournamentCode, onStart }) {
   const share = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Join the tournament', text: `Tournament code: ${tournamentCode}`, url: shareUrl });
+        await navigator.share({ title: `${team.name} — scoring link`, text: `Enter ${team.name}'s scores here`, url: shareUrl });
       } catch {
         copyLink();
       }
@@ -278,24 +278,60 @@ function StepShare({ tournamentCode, onStart }) {
   };
 
   return (
+    <div className="card mt-8">
+      <p className="section-title-sm">{team.name}</p>
+      <p style={{ fontSize: '0.8rem', color: 'var(--grey-500)', marginBottom: 8 }}>
+        {team.players.map(p => p.name).join(' & ')} — this link only lets them score for {team.name}.
+      </p>
+      <div className="share-link">
+        <span className="share-link-text">{shareUrl}</span>
+        <button className="share-link-copy" onClick={copyLink}>{copied ? 'Copied!' : 'Copy'}</button>
+      </div>
+      <button className="btn btn-secondary btn-full" style={{ marginTop: 8 }} onClick={share}>
+        <ShareIcon size={16} color="var(--green-dark)" />
+        Send to {team.name}
+      </button>
+    </div>
+  );
+}
+
+function StepShare({ tournamentCode, teams, onStart }) {
+  const [copied, setCopied] = useState(false);
+  const organizerUrl = `${window.location.origin}/tournament/${tournamentCode}`;
+
+  const copyOrganizerLink = async () => {
+    try {
+      await navigator.clipboard.writeText(organizerUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
+  return (
     <div className="page">
       <div className="game-code-display">
         <div className="game-code-label">Tournament Code</div>
         <div className="game-code-value">{tournamentCode}</div>
-        <div className="game-code-hint">Share this code with all players</div>
+        <div className="game-code-hint">Your organizer link — full access to every team</div>
       </div>
 
       <div className="card">
-        <p className="section-title-sm">Share Link</p>
+        <p className="section-title-sm">Organizer Link</p>
+        <p style={{ fontSize: '0.8rem', color: 'var(--grey-500)', marginBottom: 8 }}>
+          Keep this for yourself — it can score for any team, start the round, and finish it.
+        </p>
         <div className="share-link">
-          <span className="share-link-text">{shareUrl}</span>
-          <button className="share-link-copy" onClick={copyLink}>{copied ? 'Copied!' : 'Copy'}</button>
+          <span className="share-link-text">{organizerUrl}</span>
+          <button className="share-link-copy" onClick={copyOrganizerLink}>{copied ? 'Copied!' : 'Copy'}</button>
         </div>
-        <button className="btn btn-secondary btn-full" style={{ marginTop: 12 }} onClick={share}>
-          <ShareIcon size={16} color="var(--green-dark)" />
-          Share
-        </button>
       </div>
+
+      <p className="section-title-sm" style={{ marginTop: 20 }}>Send Each Team Their Own Link</p>
+      {teams.map((team) => (
+        <TeamShareRow key={team.id} tournamentCode={tournamentCode} team={team} />
+      ))}
 
       <div style={{ marginTop: 20 }}>
         <button
@@ -317,6 +353,7 @@ export default function CreateTournament() {
   const [step, setStep] = useState(1);
   const [course, setCourse] = useState(null);
   const [teams, setTeams] = useState([makeTeam(1), makeTeam(2)]);
+  const [createdTeams, setCreatedTeams] = useState([]);
   const [tournamentCode, setTournamentCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -327,6 +364,7 @@ export default function CreateTournament() {
     try {
       const normalizedTeams = teams.map((team, ti) => ({
         id: `team-${ti}-${Math.random().toString(36).slice(2, 8)}`,
+        editToken: Math.random().toString(36).slice(2, 10),
         name: team.name.trim(),
         players: team.players.map((p) => ({
           name: p.name.trim(),
@@ -338,6 +376,7 @@ export default function CreateTournament() {
         teams: normalizedTeams,
         userId: user?.uid ?? null,
       });
+      setCreatedTeams(normalizedTeams);
       setTournamentCode(code);
       setStep(4);
     } catch (err) {
@@ -377,7 +416,7 @@ export default function CreateTournament() {
         <StepConfirm course={course} teams={teams} onConfirm={handleConfirm} onBack={() => setStep(2)} loading={loading} />
       )}
       {step === 4 && (
-        <StepShare tournamentCode={tournamentCode} onStart={(code) => navigate(`/tournament/${code}`)} />
+        <StepShare tournamentCode={tournamentCode} teams={createdTeams} onStart={(code) => navigate(`/tournament/${code}`)} />
       )}
     </div>
   );

@@ -15,7 +15,7 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon, ShareIcon, TrophyIcon } from '../components/GolfIcon';
 
 // ===== LOBBY =====
-function LobbyView({ tournament, code }) {
+function LobbyView({ tournament, code, isOrganizer }) {
   const [starting, setStarting] = useState(false);
 
   const startTournament = async () => {
@@ -52,29 +52,40 @@ function LobbyView({ tournament, code }) {
         </div>
       ))}
 
-      <div style={{ marginTop: 24 }}>
-        <button
-          className="btn btn-primary btn-full"
-          style={{ minHeight: 60, fontSize: '1.1rem' }}
-          onClick={startTournament}
-          disabled={starting}
-        >
-          {starting ? 'Starting...' : 'Start Tournament'}
-        </button>
-      </div>
+      {isOrganizer ? (
+        <>
+          <div style={{ marginTop: 24 }}>
+            <button
+              className="btn btn-primary btn-full"
+              style={{ minHeight: 60, fontSize: '1.1rem' }}
+              onClick={startTournament}
+              disabled={starting}
+            >
+              {starting ? 'Starting...' : 'Start Tournament'}
+            </button>
+          </div>
 
-      <div className="card mt-12" style={{ textAlign: 'center' }}>
-        <p className="section-title-sm">Share</p>
-        <p style={{ fontSize: '0.875rem', color: 'var(--grey-600)', marginBottom: 8 }}>
-          Anyone with this link can enter scores for any team:
-        </p>
-        <div className="share-link">
-          <span className="share-link-text">{shareUrl}</span>
-          <button className="share-link-copy" onClick={() => navigator.clipboard?.writeText(shareUrl)}>
-            Copy
-          </button>
+          <div className="card mt-12" style={{ textAlign: 'center' }}>
+            <p className="section-title-sm">Organizer Link</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--grey-600)', marginBottom: 8 }}>
+              This link can score for any team. Send each team their own link instead
+              (from the tournament creation screen) so they can only edit their own score.
+            </p>
+            <div className="share-link">
+              <span className="share-link-text">{shareUrl}</span>
+              <button className="share-link-copy" onClick={() => navigator.clipboard?.writeText(shareUrl)}>
+                Copy
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="card mt-12" style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--grey-600)' }}>
+            Waiting for the organizer to start the tournament…
+          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -127,9 +138,9 @@ function TournamentScoreInput({ player, hole, gross, onChange }) {
 }
 
 // ===== HOLE SCORING =====
-function HoleScoringView({ tournament, scores, course, code, onShare, onViewLeaderboard }) {
+function HoleScoringView({ tournament, scores, course, code, onShare, onViewLeaderboard, lockedTeamId, isOrganizer }) {
   const adjTeams = adjustTeamsForCourse(tournament.teams, course);
-  const [selectedTeamId, setSelectedTeamId] = useState(adjTeams[0]?.id);
+  const [selectedTeamId, setSelectedTeamId] = useState(lockedTeamId ?? adjTeams[0]?.id);
   const [currentHole, setCurrentHole] = useState(tournament.currentHole || 1);
   const [localScores, setLocalScores] = useState({});
   const [saving, setSaving] = useState(false);
@@ -200,18 +211,20 @@ function HoleScoringView({ tournament, scores, course, code, onShare, onViewLead
       </div>
 
       <div style={{ padding: '16px 16px 0' }}>
-        {/* Team selector */}
-        <div className="team-chip-row">
-          {adjTeams.map((t) => (
-            <button
-              key={t.id}
-              className={`team-chip${t.id === team.id ? ' active' : ''}`}
-              onClick={() => t.id !== team.id && selectTeam(t.id)}
-            >
-              {t.name}
-            </button>
-          ))}
-        </div>
+        {/* Team selector — hidden when this link is locked to one team */}
+        {!lockedTeamId && (
+          <div className="team-chip-row">
+            {adjTeams.map((t) => (
+              <button
+                key={t.id}
+                className={`team-chip${t.id === team.id ? ' active' : ''}`}
+                onClick={() => t.id !== team.id && selectTeam(t.id)}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Hole selector grid */}
         <div className="hole-selector-grid">
@@ -276,10 +289,15 @@ function HoleScoringView({ tournament, scores, course, code, onShare, onViewLead
           {saving ? 'Saving...' : 'Save Scores'}
         </button>
 
-        {currentHole === 18 && (
+        {currentHole === 18 && isOrganizer && (
           <button className="btn btn-secondary btn-full" onClick={finishTournament} disabled={saving}>
             Finish Tournament
           </button>
+        )}
+        {currentHole === 18 && !isOrganizer && (
+          <p style={{ fontSize: '0.8rem', color: 'var(--grey-500)', textAlign: 'center' }}>
+            Ask the organizer to finish the tournament once every team is done.
+          </p>
         )}
       </div>
 
@@ -289,10 +307,16 @@ function HoleScoringView({ tournament, scores, course, code, onShare, onViewLead
           Prev
         </button>
         <span style={{ fontSize: '0.875rem', color: 'var(--grey-600)', fontWeight: 600 }}>{currentHole} / 18</span>
-        <button className="btn btn-primary btn-sm" onClick={currentHole === 18 ? finishTournament : goNext} style={{ minWidth: 100 }}>
-          {currentHole === 18 ? 'Finish' : 'Next'}
-          {currentHole !== 18 && <ChevronRightIcon size={16} />}
-        </button>
+        {currentHole === 18 ? (
+          <button className="btn btn-primary btn-sm" onClick={finishTournament} disabled={saving || !isOrganizer} style={{ minWidth: 100 }}>
+            Finish
+          </button>
+        ) : (
+          <button className="btn btn-primary btn-sm" onClick={goNext} style={{ minWidth: 100 }}>
+            Next
+            <ChevronRightIcon size={16} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -443,7 +467,7 @@ function ResultsBanner({ tournament, scores, course }) {
 
 // ===== MAIN TOURNAMENT VIEW =====
 export default function TournamentView() {
-  const { code } = useParams();
+  const { code, teamId, token } = useParams();
   const navigate = useNavigate();
   const { tournament, scores, course, loading, error } = useTournament(code);
   const [activeTab, setActiveTab] = useState('score');
@@ -473,6 +497,24 @@ export default function TournamentView() {
     );
   }
 
+  // A URL with /team/:teamId/:token locks scoring to that one team.
+  // Anything else (the plain /tournament/:code link) is the organizer view.
+  const isOrganizer = !teamId;
+  const lockedTeam = teamId ? tournament.teams.find(t => t.id === teamId) : null;
+
+  if (teamId && (!lockedTeam || lockedTeam.editToken !== token)) {
+    return (
+      <div className="app-container">
+        <Header title="Invalid Link" showBack backTo="/" />
+        <div className="error-screen">
+          <h2>Invalid Team Link</h2>
+          <p>This scoring link doesn't match a team in this tournament. Ask the organizer to resend it.</p>
+          <button className="btn btn-primary mt-16" onClick={() => navigate('/')}>Go Home</button>
+        </div>
+      </div>
+    );
+  }
+
   const title = tournament.status === 'lobby'
     ? 'Tournament Lobby'
     : tournament.status === 'complete'
@@ -481,12 +523,15 @@ export default function TournamentView() {
         ? `Hole ${tournament.currentHole} — ${course.name.split(' ')[0]}`
         : 'Scoring';
 
-  const watchUrl = `${window.location.origin}/tournament/${code}`;
+  const shareUrl = isOrganizer
+    ? `${window.location.origin}/tournament/${code}`
+    : `${window.location.origin}/tournament/${code}/team/${lockedTeam.id}/${lockedTeam.editToken}`;
   const shareTournament = () => {
+    const shareText = isOrganizer ? `Tournament code: ${code}` : `${lockedTeam.name}'s scoring link`;
     if (navigator.share) {
-      navigator.share({ title: `Tournament ${code}`, text: `Tournament code: ${code}`, url: watchUrl }).catch(() => {});
+      navigator.share({ title: `Tournament ${code}`, text: shareText, url: shareUrl }).catch(() => {});
     } else {
-      navigator.clipboard?.writeText(watchUrl);
+      navigator.clipboard?.writeText(shareUrl);
     }
   };
 
@@ -494,7 +539,7 @@ export default function TournamentView() {
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column' }}>
       <Header title={title} showBack backTo="/" />
 
-      {tournament.status === 'lobby' && <LobbyView tournament={tournament} code={code} />}
+      {tournament.status === 'lobby' && <LobbyView tournament={tournament} code={code} isOrganizer={isOrganizer} />}
 
       {tournament.status === 'active' && course && activeTab === 'score' && (
         <HoleScoringView
@@ -504,6 +549,8 @@ export default function TournamentView() {
           code={code}
           onShare={shareTournament}
           onViewLeaderboard={() => setActiveTab('leaderboard')}
+          lockedTeamId={lockedTeam?.id ?? null}
+          isOrganizer={isOrganizer}
         />
       )}
 

@@ -441,35 +441,6 @@ export const DRAMMEN_GK = {
   ]
 };
 
-export const DYNEKILEN_GK = {
-  id: 'dynekilen-gk',
-  name: 'Dynekilens Golfklubb',
-  location: 'Strömstad, Sweden',
-  par: 71,
-  courseRating: 69.7,
-  slopeRating: 126,
-  holes: [
-    { number: 1,  par: 4, strokeIndex: 7,  distance: 290, isParThree: false },
-    { number: 2,  par: 4, strokeIndex: 9,  distance: 317, isParThree: false },
-    { number: 3,  par: 5, strokeIndex: 1,  distance: 418, isParThree: false },
-    { number: 4,  par: 4, strokeIndex: 11, distance: 291, isParThree: false },
-    { number: 5,  par: 3, strokeIndex: 17, distance: 139, isParThree: true  },
-    { number: 6,  par: 4, strokeIndex: 13, distance: 219, isParThree: false },
-    { number: 7,  par: 3, strokeIndex: 15, distance: 135, isParThree: true  },
-    { number: 8,  par: 4, strokeIndex: 3,  distance: 251, isParThree: false },
-    { number: 9,  par: 4, strokeIndex: 5,  distance: 231, isParThree: false },
-    { number: 10, par: 4, strokeIndex: 10, distance: 309, isParThree: false },
-    { number: 11, par: 4, strokeIndex: 2,  distance: 362, isParThree: false },
-    { number: 12, par: 4, strokeIndex: 4,  distance: 349, isParThree: false },
-    { number: 13, par: 3, strokeIndex: 18, distance: 129, isParThree: true  },
-    { number: 14, par: 5, strokeIndex: 12, distance: 403, isParThree: false },
-    { number: 15, par: 4, strokeIndex: 8,  distance: 303, isParThree: false },
-    { number: 16, par: 3, strokeIndex: 14, distance: 141, isParThree: true  },
-    { number: 17, par: 5, strokeIndex: 6,  distance: 433, isParThree: false },
-    { number: 18, par: 4, strokeIndex: 16, distance: 364, isParThree: false },
-  ]
-};
-
 export const ALL_COURSES = [
   STROMSTAD_GK,
   DROBAK_GK,
@@ -486,7 +457,6 @@ export const ALL_COURSES = [
   ONSOY_GK,
   GAMLE_FREDRIKSTAD_GK,
   DRAMMEN_GK,
-  DYNEKILEN_GK,
 ];
 
 export function getCourseById(id) {

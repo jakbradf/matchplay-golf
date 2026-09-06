@@ -138,7 +138,7 @@ function TournamentScoreInput({ player, hole, gross, onChange }) {
 }
 
 // ===== HOLE SCORING =====
-function HoleScoringView({ tournament, scores, course, code, onShare, onViewLeaderboard, lockedTeamId, isOrganizer }) {
+function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrganizer }) {
   const adjTeams = adjustTeamsForCourse(tournament.teams, course);
   const [selectedTeamId, setSelectedTeamId] = useState(lockedTeamId ?? adjTeams[0]?.id);
   const [currentHole, setCurrentHole] = useState(tournament.currentHole || 1);
@@ -197,19 +197,6 @@ function HoleScoringView({ tournament, scores, course, code, onShare, onViewLead
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <div className="game-share-bar">
-        <div className="game-share-code">Code: <strong>{code}</strong></div>
-        <button className="game-share-btn" onClick={onShare}>
-          <ShareIcon size={14} color="var(--green-dark)" />
-          Share
-        </button>
-      </div>
-
-      <div className="tabs" style={{ margin: 0, padding: '0 16px' }}>
-        <button className="tab-btn active">Score Entry</button>
-        <button className="tab-btn" onClick={onViewLeaderboard}>Leaderboard</button>
-      </div>
-
       <div style={{ padding: '16px 16px 0' }}>
         {/* Team selector — hidden when this link is locked to one team */}
         {!lockedTeamId && (
@@ -541,31 +528,50 @@ export default function TournamentView() {
 
       {tournament.status === 'lobby' && <LobbyView tournament={tournament} code={code} isOrganizer={isOrganizer} />}
 
-      {tournament.status === 'active' && course && activeTab === 'score' && (
-        <HoleScoringView
-          tournament={tournament}
-          scores={scores}
-          course={course}
-          code={code}
-          onShare={shareTournament}
-          onViewLeaderboard={() => setActiveTab('leaderboard')}
-          lockedTeamId={lockedTeam?.id ?? null}
-          isOrganizer={isOrganizer}
-        />
-      )}
-
-      {tournament.status === 'active' && course && activeTab === 'leaderboard' && (
+      {tournament.status === 'active' && course && (
         <>
           <div className="game-share-bar">
             <div className="game-share-code">Code: <strong>{code}</strong></div>
+            <button className="game-share-btn" onClick={shareTournament}>
+              <ShareIcon size={14} color="var(--green-dark)" />
+              Share
+            </button>
           </div>
-          <LeaderboardView
-            tournament={tournament}
-            scores={scores}
-            course={course}
-            showBackToScoring
-            onBackToScoring={() => setActiveTab('score')}
-          />
+
+          <div className="tabs" style={{ margin: 0, padding: '0 16px' }}>
+            <button
+              className={`tab-btn${activeTab === 'score' ? ' active' : ''}`}
+              onClick={() => setActiveTab('score')}
+            >
+              Score Entry
+            </button>
+            <button
+              className={`tab-btn${activeTab === 'leaderboard' ? ' active' : ''}`}
+              onClick={() => setActiveTab('leaderboard')}
+            >
+              Leaderboard
+            </button>
+          </div>
+
+          {activeTab === 'score' && (
+            <HoleScoringView
+              tournament={tournament}
+              scores={scores}
+              course={course}
+              code={code}
+              lockedTeamId={lockedTeam?.id ?? null}
+              isOrganizer={isOrganizer}
+            />
+          )}
+
+          {activeTab === 'leaderboard' && (
+            <LeaderboardView
+              tournament={tournament}
+              scores={scores}
+              course={course}
+              showBackToScoring={false}
+            />
+          )}
         </>
       )}
 

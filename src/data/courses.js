@@ -441,6 +441,93 @@ export const DRAMMEN_GK = {
   ]
 };
 
+export const HAGA_GUL_ROD_GK = {
+  id: 'haga-gul-rod-gk',
+  name: 'Haga Golfklubb (Gul/Rød)',
+  location: 'Bærum, Norway',
+  par: 71,
+  courseRating: 70.8,
+  slopeRating: 134,
+  holes: [
+    { number: 1,  par: 4, strokeIndex: 5,  distance: 368, isParThree: false },
+    { number: 2,  par: 4, strokeIndex: 15, distance: 278, isParThree: false },
+    { number: 3,  par: 4, strokeIndex: 7,  distance: 325, isParThree: false },
+    { number: 4,  par: 3, strokeIndex: 13, distance: 148, isParThree: true  },
+    { number: 5,  par: 5, strokeIndex: 11, distance: 416, isParThree: false },
+    { number: 6,  par: 3, strokeIndex: 17, distance: 138, isParThree: true  },
+    { number: 7,  par: 4, strokeIndex: 1,  distance: 360, isParThree: false },
+    { number: 8,  par: 5, strokeIndex: 9,  distance: 414, isParThree: false },
+    { number: 9,  par: 4, strokeIndex: 3,  distance: 337, isParThree: false },
+    { number: 10, par: 4, strokeIndex: 4,  distance: 364, isParThree: false },
+    { number: 11, par: 4, strokeIndex: 8,  distance: 333, isParThree: false },
+    { number: 12, par: 4, strokeIndex: 16, distance: 300, isParThree: false },
+    { number: 13, par: 4, strokeIndex: 10, distance: 340, isParThree: false },
+    { number: 14, par: 4, strokeIndex: 2,  distance: 376, isParThree: false },
+    { number: 15, par: 3, strokeIndex: 14, distance: 144, isParThree: true  },
+    { number: 16, par: 4, strokeIndex: 12, distance: 327, isParThree: false },
+    { number: 17, par: 3, strokeIndex: 18, distance: 108, isParThree: true  },
+    { number: 18, par: 5, strokeIndex: 6,  distance: 470, isParThree: false },
+  ]
+};
+
+export const HAGA_BLA_ROD_GK = {
+  id: 'haga-bla-rod-gk',
+  name: 'Haga Golfklubb (Blå/Rød)',
+  location: 'Bærum, Norway',
+  par: 71,
+  courseRating: 70.8,
+  slopeRating: 131,
+  holes: [
+    { number: 1,  par: 5, strokeIndex: 11, distance: 457, isParThree: false },
+    { number: 2,  par: 3, strokeIndex: 17, distance: 126, isParThree: true  },
+    { number: 3,  par: 4, strokeIndex: 13, distance: 288, isParThree: false },
+    { number: 4,  par: 4, strokeIndex: 15, distance: 274, isParThree: false },
+    { number: 5,  par: 5, strokeIndex: 7,  distance: 491, isParThree: false },
+    { number: 6,  par: 4, strokeIndex: 3,  distance: 346, isParThree: false },
+    { number: 7,  par: 3, strokeIndex: 9,  distance: 165, isParThree: true  },
+    { number: 8,  par: 4, strokeIndex: 1,  distance: 337, isParThree: false },
+    { number: 9,  par: 4, strokeIndex: 5,  distance: 341, isParThree: false },
+    { number: 10, par: 4, strokeIndex: 4,  distance: 364, isParThree: false },
+    { number: 11, par: 4, strokeIndex: 8,  distance: 333, isParThree: false },
+    { number: 12, par: 4, strokeIndex: 16, distance: 300, isParThree: false },
+    { number: 13, par: 4, strokeIndex: 10, distance: 340, isParThree: false },
+    { number: 14, par: 4, strokeIndex: 2,  distance: 376, isParThree: false },
+    { number: 15, par: 3, strokeIndex: 14, distance: 144, isParThree: true  },
+    { number: 16, par: 4, strokeIndex: 12, distance: 327, isParThree: false },
+    { number: 17, par: 3, strokeIndex: 18, distance: 108, isParThree: true  },
+    { number: 18, par: 5, strokeIndex: 6,  distance: 470, isParThree: false },
+  ]
+};
+
+export const HAGA_BLA_GUL_GK = {
+  id: 'haga-bla-gul-gk',
+  name: 'Haga Golfklubb (Blå/Gul)',
+  location: 'Bærum, Norway',
+  par: 72,
+  courseRating: 71.4,
+  slopeRating: 133,
+  holes: [
+    { number: 1,  par: 5, strokeIndex: 11, distance: 457, isParThree: false },
+    { number: 2,  par: 3, strokeIndex: 17, distance: 126, isParThree: true  },
+    { number: 3,  par: 4, strokeIndex: 13, distance: 288, isParThree: false },
+    { number: 4,  par: 4, strokeIndex: 15, distance: 274, isParThree: false },
+    { number: 5,  par: 5, strokeIndex: 7,  distance: 491, isParThree: false },
+    { number: 6,  par: 4, strokeIndex: 3,  distance: 346, isParThree: false },
+    { number: 7,  par: 3, strokeIndex: 9,  distance: 165, isParThree: true  },
+    { number: 8,  par: 4, strokeIndex: 1,  distance: 337, isParThree: false },
+    { number: 9,  par: 4, strokeIndex: 5,  distance: 341, isParThree: false },
+    { number: 10, par: 4, strokeIndex: 6,  distance: 368, isParThree: false },
+    { number: 11, par: 4, strokeIndex: 16, distance: 278, isParThree: false },
+    { number: 12, par: 4, strokeIndex: 8,  distance: 325, isParThree: false },
+    { number: 13, par: 3, strokeIndex: 14, distance: 148, isParThree: true  },
+    { number: 14, par: 5, strokeIndex: 12, distance: 416, isParThree: false },
+    { number: 15, par: 3, strokeIndex: 18, distance: 138, isParThree: true  },
+    { number: 16, par: 4, strokeIndex: 2,  distance: 360, isParThree: false },
+    { number: 17, par: 5, strokeIndex: 10, distance: 414, isParThree: false },
+    { number: 18, par: 4, strokeIndex: 4,  distance: 337, isParThree: false },
+  ]
+};
+
 export const ALL_COURSES = [
   STROMSTAD_GK,
   DROBAK_GK,
@@ -457,6 +544,9 @@ export const ALL_COURSES = [
   ONSOY_GK,
   GAMLE_FREDRIKSTAD_GK,
   DRAMMEN_GK,
+  HAGA_GUL_ROD_GK,
+  HAGA_BLA_ROD_GK,
+  HAGA_BLA_GUL_GK,
 ];
 
 export function getCourseById(id) {

@@ -1170,6 +1170,37 @@ body {
   border-bottom-color: var(--green-dark);
 }
 
+/* ===== TOURNAMENT: TEAM SELECTOR ===== */
+.team-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.team-chip {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--grey-300);
+  background: var(--white);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--grey-700);
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  transition: all 0.1s;
+}
+
+.team-chip.active {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  color: var(--white);
+}
+
 /* ===== LOADING / ERROR ===== */
 .loading-screen {
   display: flex;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GolfBallIcon, GolfFlagIcon, HistoryIcon } from '../components/GolfIcon';
+import { GolfBallIcon, GolfFlagIcon, HistoryIcon, TrophyIcon } from '../components/GolfIcon';
 import UserMenu from '../components/UserMenu';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserGames } from '../firebase/gameService';
@@ -61,6 +61,22 @@ export default function Home() {
             style={{ minHeight: 60, fontSize: '1.125rem' }}
           >
             Join Game
+          </button>
+        </div>
+
+        <div className="home-actions" style={{ marginTop: 8 }}>
+          <button
+            className="btn btn-secondary btn-full"
+            onClick={() => navigate('/create-tournament')}
+          >
+            <TrophyIcon size={18} color="var(--green-dark)" />
+            Host Tournament
+          </button>
+          <button
+            className="btn btn-secondary btn-full"
+            onClick={() => navigate('/join-tournament')}
+          >
+            Join Tournament
           </button>
         </div>
 

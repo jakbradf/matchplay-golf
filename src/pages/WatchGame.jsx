@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../hooks/useGame';
 import Header from '../components/Header';
-import MatchStatusBar from '../components/MatchStatusBar';
+import MatchStateBlock from '../components/MatchStateBlock';
 import Scorecard from '../components/Scorecard';
 import { computeMatchScore, getMatchStatus, adjustTeamsForCourse } from '../utils/scoring';
 import { TrophyIcon } from '../components/GolfIcon';
@@ -60,7 +60,7 @@ export default function WatchGame() {
 
       <div className="page" style={{ flex: 1, overflowY: 'auto' }}>
         {isActive && (
-          <MatchStatusBar scores={scores} teams={adjTeams} courseHoles={course.holes} />
+          <MatchStateBlock scores={scores} teams={adjTeams} courseHoles={course.holes} currentHole={game.currentHole} />
         )}
 
         {isComplete && (

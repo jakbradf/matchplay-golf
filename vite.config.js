@@ -21,10 +21,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
-        name: 'Matchplay Golf',
-        short_name: 'Matchplay',
+        name: 'Golf Match',
+        short_name: 'Golf Match',
         description: 'Real-time matchplay golf scoring with handicaps',
-        theme_color: '#1a5c38',
+        theme_color: '#00a651',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',

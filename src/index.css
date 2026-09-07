@@ -6,23 +6,29 @@
 }
 
 :root {
-  --green-dark: #1a5c38;
-  --green-mid: #2d7a50;
-  --green-light: #e8f5ee;
-  --green-pale: #f2faf6;
+  /* Golf Match — white / vivid-green identity (replaces the old forest-green + gold palette) */
+  --green-dark: #00a651;      /* brand green — primary actions, marks, live state */
+  --green-mid: #00803f;       /* deep green — hover, small type on white */
+  --green-light: #e6f6ec;     /* green tint — selected chips/tabs, badges */
+  --green-pale: #f4f7f4;      /* alternate ground tone (was a pale green wash) */
+  --green-press: #c9ecd7;
   --white: #ffffff;
-  --grey-50: #f8f9fa;
-  --grey-100: #f1f3f5;
-  --grey-200: #e9ecef;
-  --grey-300: #dee2e6;
-  --grey-400: #ced4da;
-  --grey-500: #adb5bd;
-  --grey-600: #6c757d;
-  --grey-700: #495057;
-  --grey-800: #343a40;
-  --grey-900: #212529;
-  --red: #c0392b;
-  --red-light: #fdecea;
+  --grey-50: #f4f7f4;         /* surf / alternate ground */
+  --grey-100: #eef2ef;        /* empty strip bar */
+  --grey-200: #e3e9e5;        /* hairline rule */
+  --grey-300: #d7e0da;        /* control border */
+  --grey-400: #b9c6bd;
+  --grey-500: #8fa197;        /* faint ink */
+  --grey-600: #5b6b62;        /* muted ink */
+  --grey-700: #3a453e;
+  --grey-800: #1c2620;
+  --grey-900: #0e1a13;        /* ink */
+  --navy: #10429b;            /* bogey */
+  --red: #c8332c;             /* lost / double bogey or worse */
+  --red-light: #fae4e2;
+  --win: #0a8f4d;              /* won / under par */
+  --win-light: #dff3e6;
+  --halve: #1a1a1a;
   --gold: #d4af37;
   --gold-light: #fdf8e8;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
@@ -33,7 +39,7 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-full: 9999px;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
 }
 
 html {
@@ -80,8 +86,8 @@ body {
 
 /* ===== HEADER ===== */
 .app-header {
-  background: var(--green-dark);
-  color: var(--white);
+  background: var(--white);
+  color: var(--grey-900);
   padding: 14px 16px;
   /* Respect iOS notch/Dynamic Island when running as PWA */
   padding-top: max(14px, env(safe-area-inset-top));
@@ -91,12 +97,12 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow-md);
+  border-bottom: 3px solid var(--green-dark);
 }
 
 .app-header h1 {
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
   flex: 1;
 }
@@ -104,7 +110,7 @@ body {
 .app-header .back-btn {
   background: none;
   border: none;
-  color: var(--white);
+  color: var(--grey-900);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -114,7 +120,7 @@ body {
 }
 
 .app-header .back-btn:active {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 /* ===== BUTTONS ===== */
@@ -1929,4 +1935,514 @@ body {
 .hole-select:focus {
   outline: none;
   border-color: var(--green-dark);
+}
+
+/* ==================================================================
+   GOLF MATCH — redesigned scoring + leaderboard (handoff 5a / 5b / 6)
+   White ground, one vivid green, hairline rules, no shadows.
+   ================================================================== */
+
+/* ---- scoring screen header (bespoke — not .app-header) ---- */
+.gm-score-header {
+  padding: max(20px, env(safe-area-inset-top)) 20px 16px;
+  border-bottom: 3px solid var(--green-dark);
+  background: var(--white);
+}
+
+.gm-score-header-row1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gm-score-eyebrow {
+  font: 600 13px/1 'Inter', sans-serif;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--green-mid);
+}
+
+.gm-score-course {
+  font: 400 12.5px/1 'Inter', sans-serif;
+  color: var(--grey-600);
+  text-align: right;
+}
+
+.gm-score-header-row2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.gm-hole-number {
+  font: 600 34px/1 'Inter', sans-serif;
+  letter-spacing: -0.03em;
+  color: var(--grey-900);
+}
+
+.gm-hole-meta {
+  font: 400 13px/1 'Inter', sans-serif;
+  color: var(--grey-600);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- match state block ---- */
+.gm-match-block {
+  padding: 20px 20px 18px;
+}
+
+.gm-match-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.gm-match-standing {
+  font: 500 46px/0.94 'Inter', sans-serif;
+  letter-spacing: -0.035em;
+}
+
+.gm-match-sub {
+  text-align: right;
+  padding-bottom: 8px;
+  font: 400 12.5px/1.6 'Inter', sans-serif;
+  color: var(--grey-600);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gm-hole-strip {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 28px;
+  margin-top: 20px;
+}
+
+.gm-strip-bar {
+  flex: 1;
+  border-radius: 2px;
+}
+
+/* ---- settled-hole badge ---- */
+.gm-settled {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin: 0 20px 4px;
+}
+
+.gm-settled-bar {
+  width: 3px;
+  height: 30px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.gm-settled-word {
+  font: 500 15px/1.3 'Inter', sans-serif;
+}
+
+.gm-settled-sub {
+  font: 400 12.5px/1.3 'Inter', sans-serif;
+  color: var(--grey-600);
+  margin-top: 2px;
+}
+
+/* ---- team blocks ---- */
+.gm-team-block {
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--grey-200);
+}
+
+.gm-team-block.alt {
+  background: var(--grey-50);
+}
+
+.gm-team-block.winner {
+  border-left: 3px solid var(--win);
+  background: var(--win-light);
+}
+
+.gm-team-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 10px;
+}
+
+.gm-team-mark {
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.gm-team-name {
+  flex: 1;
+  font: 600 12px/1 'Inter', sans-serif;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--grey-900);
+}
+
+.gm-team-best {
+  font: 400 13px/1 'Inter', sans-serif;
+  color: var(--grey-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 20px;
+  border-top: 1px solid var(--grey-200);
+}
+
+.gm-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.gm-player-name-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.gm-player-name {
+  font: 500 16px/1.2 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--grey-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gm-player-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.gm-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  flex-shrink: 0;
+}
+
+.gm-player-meta {
+  font: 400 12px/1.4 'Inter', sans-serif;
+  color: var(--grey-600);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- score chips ---- */
+.gm-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.gm-chip {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font: 500 16px/1 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--grey-300);
+  background: transparent;
+  color: var(--grey-600);
+  font-family: var(--font);
+  transition: all 0.12s ease;
+}
+
+.gm-chip.selected {
+  border: 1px solid var(--green-dark);
+  background: var(--green-light);
+  color: var(--green-mid);
+}
+
+/* ---- footer ---- */
+.gm-score-footer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: var(--white);
+  border-top: 1px solid var(--grey-200);
+}
+
+.gm-footer-back {
+  width: 72px;
+  height: 52px;
+  border: 1px solid var(--grey-300);
+  background: transparent;
+  border-radius: 10px;
+  color: var(--grey-600);
+  font: 500 13px/1 'Inter', sans-serif;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.gm-footer-back:hover {
+  border-color: var(--green-dark);
+  color: var(--grey-900);
+}
+
+.gm-footer-primary {
+  flex: 1;
+  height: 52px;
+  border: none;
+  background: var(--green-dark);
+  border-radius: 10px;
+  color: var(--white);
+  font: 600 13.5px/1 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.12s ease;
+}
+
+.gm-footer-primary:hover {
+  background: var(--green-mid);
+}
+
+/* ---- leaderboard (5b) ---- */
+.gm-lb-header {
+  padding: max(20px, env(safe-area-inset-top)) 20px 14px;
+  border-bottom: 3px solid var(--green-dark);
+  background: var(--white);
+}
+
+.gm-lb-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gm-lb-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.gm-lb-tab {
+  padding: 8px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: 500 12.5px/1 'Inter', sans-serif;
+  border: 1px solid var(--grey-300);
+  background: transparent;
+  color: var(--grey-600);
+  font-family: var(--font);
+}
+
+.gm-lb-tab.active {
+  border: 1px solid var(--green-dark);
+  background: var(--green-light);
+  color: var(--green-mid);
+}
+
+.gm-lb-colheader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 8px;
+  font: 600 10.5px/1 'Inter', sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--grey-500);
+}
+
+.gm-lb-row {
+  border-top: 1px solid var(--grey-200);
+}
+
+.gm-lb-row.open {
+  background: var(--grey-50);
+}
+
+.gm-lb-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gm-lb-rank {
+  width: 16px;
+  font: 500 13px/1 'Inter', sans-serif;
+  color: var(--grey-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-lb-name-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.gm-lb-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gm-lb-name {
+  font: 500 16px/1.2 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--grey-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gm-lb-team-tag {
+  font: 500 10.5px/1 'Inter', sans-serif;
+  padding: 3px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.gm-lb-team-tag.a {
+  background: var(--green-light);
+  color: var(--green-mid);
+}
+
+.gm-lb-team-tag.b {
+  background: var(--grey-50);
+  color: var(--grey-600);
+}
+
+.gm-lb-meta {
+  font: 400 12px/1.4 'Inter', sans-serif;
+  color: var(--grey-600);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-lb-gross {
+  width: 42px;
+  text-align: right;
+  font: 500 15px/1 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--grey-900);
+}
+
+.gm-lb-topar {
+  width: 46px;
+  text-align: right;
+  font: 500 15px/1 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-lb-thru {
+  width: 34px;
+  text-align: right;
+  font: 400 13px/1 'Inter', sans-serif;
+  color: var(--grey-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-lb-card {
+  padding: 2px 20px 18px;
+}
+
+.gm-lb-half {
+  margin-bottom: 14px;
+}
+
+.gm-lb-grid-row {
+  display: grid;
+  grid-template-columns: 34px repeat(9, 1fr) 34px;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.gm-lb-grid-label {
+  font: 400 11px/1.2 'Inter', sans-serif;
+  color: var(--grey-600);
+}
+
+.gm-lb-grid-num {
+  text-align: center;
+  font: 400 12px/1.2 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--grey-600);
+}
+
+.gm-lb-grid-total {
+  text-align: right;
+  font: 400 12px/1.2 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--grey-600);
+}
+
+.gm-lb-grid-total.strong {
+  font-weight: 500;
+  color: var(--grey-900);
+}
+
+.gm-lb-cell {
+  text-align: center;
+  font: 500 12.5px/22px 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  border-radius: 6px;
+  color: var(--grey-900);
+}
+
+.gm-lb-cell.empty {
+  color: var(--grey-400);
+}
+
+.gm-lb-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.gm-lb-foot-line {
+  font: 400 12.5px/1 'Inter', sans-serif;
+  color: var(--grey-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-lb-foot-hint {
+  font: 400 12px/1 'Inter', sans-serif;
+  color: var(--grey-500);
+}
+
+.gm-lb-end-btn {
+  width: 100%;
+  height: 52px;
+  border: none;
+  background: var(--green-dark);
+  border-radius: 10px;
+  color: var(--white);
+  font: 600 13.5px/1 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+.gm-lb-end-btn:hover {
+  background: var(--green-mid);
 }

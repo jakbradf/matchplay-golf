@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, GolfFlagIcon } from './GolfIcon';
+import { ChevronLeftIcon } from './GolfIcon';
+import { GolfMatchMark } from './GolfMatchLogo';
 
 export default function Header({ title, showBack = false, backTo, rightElement }) {
   const navigate = useNavigate();
@@ -16,11 +17,11 @@ export default function Header({ title, showBack = false, backTo, rightElement }
     <header className="app-header">
       {showBack && (
         <button className="back-btn" onClick={handleBack} aria-label="Go back">
-          <ChevronLeftIcon size={22} color="white" />
+          <ChevronLeftIcon size={22} color="#0e1a13" />
         </button>
       )}
       {!showBack && (
-        <GolfFlagIcon size={22} color="white" />
+        <GolfMatchMark size={22} />
       )}
       <h1>{title}</h1>
       {rightElement && <div>{rightElement}</div>}

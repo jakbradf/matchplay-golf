@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GolfBallIcon, GolfFlagIcon, HistoryIcon, TrophyIcon } from '../components/GolfIcon';
+import { GolfFlagIcon, HistoryIcon, TrophyIcon } from '../components/GolfIcon';
+import { GolfMatchLogo } from '../components/GolfMatchLogo';
 import UserMenu from '../components/UserMenu';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserGames } from '../firebase/gameService';
@@ -38,10 +39,9 @@ export default function Home() {
         </div>
 
         <div className="home-hero">
-          <div className="home-logo">
-            <GolfBallIcon size={48} color="white" />
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <GolfMatchLogo markSize={64} wordSize={30} gap={16} />
           </div>
-          <h1 className="home-title">Matchplay Golf</h1>
           <p className="home-subtitle">4-ball better ball · Handicap adjusted · Real-time scoring</p>
         </div>
 

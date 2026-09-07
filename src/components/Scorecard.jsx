@@ -1,212 +1,150 @@
-import { buildScorecardData, computeMatchScore, getMatchplayStrokes, adjustTeamsForCourse, getCourseHandicap } from '../utils/scoring';
-import PlayerAvatar from './PlayerAvatar';
+import { useState } from 'react';
+import { adjustTeamsForCourse } from '../utils/scoring';
+import { getPlayerStats, getPlayerHoleGrid } from '../utils/individualStats';
 
-function ResultCell({ result, teamIndex }) {
-  if (!result) return <td className="result-halved">-</td>;
-  if (result.result === 'halved') return <td className="result-halved">H</td>;
-  if (result.result === `team${teamIndex}`) {
-    return <td className={`result-win${teamIndex}`}>W</td>;
-  }
-  return <td className={`result-win${1 - teamIndex}`}>L</td>;
+const TABS = [
+  { key: 'gross', label: 'Gross' },
+  { key: 'net', label: 'Net' },
+  { key: 'match', label: 'Match' },
+];
+
+function fmtToPar(d) {
+  if (d === 0) return 'E';
+  return d > 0 ? `+${d}` : String(d);
 }
 
-function GrossCell({ gross, hasMatchplayStroke, isContributor }) {
-  if (gross == null) return <td>—</td>;
+function fmtUp(u) {
+  if (u === 0) return 'AS';
+  return `${Math.abs(u)} ${u > 0 ? 'up' : 'dn'}`;
+}
+
+function scoreCellStyle(diff) {
+  if (diff == null) return { background: 'transparent', color: '#b9c6bd' };
+  if (diff < 0) return { background: '#0a8f4d', color: '#ffffff' };
+  if (diff === 1) return { background: '#10429b', color: '#ffffff' };
+  if (diff > 1) return { background: '#c8332c', color: '#ffffff' };
+  return { background: 'transparent', color: '#0e1a13' };
+}
+
+function HalfGrid({ half, label }) {
   return (
-    <td className={isContributor ? 'contributor-cell' : ''}>
-      {hasMatchplayStroke
-        ? <span className="gross-matchplay-circle">{gross}</span>
-        : gross}
-    </td>
+    <div className="gm-lb-half">
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">{label}</div>
+        {half.holeNumbers.map((n) => <div key={n} className="gm-lb-grid-num">{n}</div>)}
+        <div className="gm-lb-grid-total strong">Tot</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">par</div>
+        {half.pars.map((p, i) => <div key={i} className="gm-lb-grid-num">{p}</div>)}
+        <div className="gm-lb-grid-total">{half.totalPar}</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">score</div>
+        {half.cells.map((c, i) => (
+          <div key={i} className={`gm-lb-cell${c.gross == null ? ' empty' : ''}`} style={scoreCellStyle(c.diff)}>
+            {c.gross ?? ''}
+          </div>
+        ))}
+        <div className="gm-lb-grid-total strong">{half.anyScored ? half.totalGross : ''}</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">net</div>
+        {half.cells.map((c, i) => <div key={i} className="gm-lb-grid-num">{c.net ?? ''}</div>)}
+        <div className="gm-lb-grid-total">{half.anyScored ? half.totalNet : ''}</div>
+      </div>
+    </div>
   );
 }
 
-export default function Scorecard({ scores, teams, course }) {
+export default function Scorecard({ scores, teams, course, onEndGame }) {
+  const [tab, setTab] = useState('gross');
+  const [openKey, setOpenKey] = useState(null);
+
   const adjTeams = adjustTeamsForCourse(teams, course);
-  const data = buildScorecardData(scores, adjTeams, course.holes);
-  const [t0total, t1total] = computeMatchScore(scores, adjTeams, course.holes);
+  const rows = getPlayerStats(scores, adjTeams, course.holes, tab === 'net' ? 'net' : 'gross');
 
-  const allPlayers = [...adjTeams[0].players, ...adjTeams[1].players];
-  const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
-
-  const front = data.filter(d => d.hole.number <= 9);
-  const back = data.filter(d => d.hole.number >= 10);
-
-
-  // Count contribution holes per player across all scored holes
-  const contributionCounts = [
-    adjTeams[0].players.map(() => 0),
-    adjTeams[1].players.map(() => 0),
-  ];
-  data.forEach(({ contributors }) => {
-    if (!contributors) return;
-    contributors.forEach((indices, ti) => {
-      indices.forEach(pi => {
-        contributionCounts[ti][pi]++;
-      });
-    });
+  const sorted = [...rows].sort((a, b) => {
+    if (tab === 'match') return b.up - a.up || a.toPar - b.toPar;
+    return a.toPar - b.toPar || (tab === 'net' ? a.net - b.net : a.gross - b.gross);
   });
 
-  const renderHalfTable = (rows, label) => {
-    const team0pts = rows.reduce((s, d) => s + (d.result?.team0points || 0), 0);
-    const team1pts = rows.reduce((s, d) => s + (d.result?.team1points || 0), 0);
-    const team0extra = rows.reduce((s, d) => s + (d.holeScores?.team0?.extraPoints || 0), 0);
-    const team1extra = rows.reduce((s, d) => s + (d.holeScores?.team1?.extraPoints || 0), 0);
-
-    const team0GrossTotals = teams[0].players.map((_, i) => {
-      const scored = rows.filter(({ holeScores }) => holeScores?.team0?.[`player${i}gross`] != null);
-      if (!scored.length) return null;
-      return scored.reduce((sum, { holeScores }) => sum + holeScores.team0[`player${i}gross`], 0);
-    });
-    const team1GrossTotals = teams[1].players.map((_, i) => {
-      const scored = rows.filter(({ holeScores }) => holeScores?.team1?.[`player${i}gross`] != null);
-      if (!scored.length) return null;
-      return scored.reduce((sum, { holeScores }) => sum + holeScores.team1[`player${i}gross`], 0);
-    });
-
-    return (
-      <div className="scorecard-wrapper">
-        <table className="scorecard-table">
-          <thead>
-            <tr>
-              <th className="col-fixed">H</th>
-              <th className="col-fixed">Par</th>
-              <th className="col-fixed">SI</th>
-              {teams[0].players.map((p, i) => (
-                <th key={i} className="col-player" title={`${p.name} — HCP Index ${p.handicap} → Course HCP ${adjTeams[0].players[i].handicap}`}>
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <PlayerAvatar name={p.name} photoURL={p.photoURL} size={24} />
-                  </div>
-                </th>
-              ))}
-              <th className="col-fixed">Net</th>
-              <th className="col-fixed">Res</th>
-              {teams[1].players.map((p, i) => (
-                <th key={i} className="col-player" title={`${p.name} — HCP Index ${p.handicap} → Course HCP ${adjTeams[1].players[i].handicap}`}>
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <PlayerAvatar name={p.name} photoURL={p.photoURL} size={24} />
-                  </div>
-                </th>
-              ))}
-              <th className="col-fixed">Net</th>
-              <th className="col-fixed">Res</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td
-                colSpan={3 + teams[0].players.length + teams[1].players.length + 4}
-                className="scorecard-section-header"
-              >
-                {label} — {teams[0].name} vs {teams[1].name}
-              </td>
-            </tr>
-            {rows.map(({ hole, holeScores, result, team0nets, team1nets, contributors }) => (
-              <tr key={hole.number}>
-                <td className="col-hole">{hole.number}</td>
-                <td>{hole.par}</td>
-                <td className="col-si">{hole.strokeIndex}</td>
-                {adjTeams[0].players.map((p, i) => (
-                  <GrossCell
-                    key={i}
-                    gross={holeScores?.team0?.[`player${i}gross`] ?? null}
-                    hasMatchplayStroke={getMatchplayStrokes(p.handicap, minHandicap, hole.strokeIndex) > 0}
-                    isContributor={contributors?.[0]?.includes(i) ?? false}
-                  />
-                ))}
-                <td className="col-net">
-                  {team0nets.some(n => n !== null) ? Math.min(...team0nets.filter(n => n !== null)) : '—'}
-                </td>
-                <ResultCell result={result} teamIndex={0} />
-                {adjTeams[1].players.map((p, i) => (
-                  <GrossCell
-                    key={i}
-                    gross={holeScores?.team1?.[`player${i}gross`] ?? null}
-                    hasMatchplayStroke={getMatchplayStrokes(p.handicap, minHandicap, hole.strokeIndex) > 0}
-                    isContributor={contributors?.[1]?.includes(i) ?? false}
-                  />
-                ))}
-                <td className="col-net">
-                  {team1nets.some(n => n !== null) ? Math.min(...team1nets.filter(n => n !== null)) : '—'}
-                </td>
-                <ResultCell result={result} teamIndex={1} />
-              </tr>
-            ))}
-            <tr className="scorecard-totals">
-              <td colSpan={3}>Total</td>
-              {team0GrossTotals.map((total, i) => (
-                <td key={i}>{total ?? '—'}</td>
-              ))}
-              <td />
-              <td style={{ color: 'var(--green-dark)' }}>
-                {team0pts}pts{team0extra > 0 ? ` +${team0extra}⭐` : ''}
-              </td>
-              {team1GrossTotals.map((total, i) => (
-                <td key={i}>{total ?? '—'}</td>
-              ))}
-              <td />
-              <td style={{ color: 'var(--green-dark)' }}>
-                {team1pts}pts{team1extra > 0 ? ` +${team1extra}⭐` : ''}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  const holesScored = data.filter(d => d.result !== null).length;
+  const maxThru = Math.max(0, ...rows.map((r) => r.thru));
+  const colA = tab === 'match' ? 'Pair' : (tab === 'net' ? 'Net' : 'Gross');
+  const colB = tab === 'match' ? 'Holes' : 'To par';
+  const modeLabel = tab === 'match' ? 'match play' : tab === 'net' ? 'net' : 'gross';
 
   return (
     <div>
-      {renderHalfTable(front, 'Front 9')}
-      {renderHalfTable(back, 'Back 9')}
-
-      <div className="match-summary">
-        <div className="summary-team">
-          <div className="summary-team-name">{teams[0].name}</div>
-          <div className="summary-points">{t0total}</div>
-        </div>
-        <div className="summary-vs">PTS</div>
-        <div className="summary-team">
-          <div className="summary-team-name">{teams[1].name}</div>
-          <div className="summary-points">{t1total}</div>
-        </div>
+      <div className="gm-lb-tabs" style={{ marginTop: 0 }}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            className={`gm-lb-tab${tab === t.key ? ' active' : ''}`}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {holesScored > 0 && (
-        <div className="contrib-summary">
-          <div className="contrib-summary-title">Player Contributions</div>
-          <div className="contrib-summary-grid">
-            {[0, 1].map(ti => (
-              <div key={ti} className="contrib-team-col">
-                <div className="contrib-team-name">{teams[ti].name}</div>
-                {teams[ti].players.map((p, pi) => {
-                  const count = contributionCounts[ti][pi];
-                  const pct = holesScored > 0 ? Math.round((count / holesScored) * 100) : 0;
-                  return (
-                    <div key={pi} className="contrib-player-row">
-                      <span className="contrib-player-name">{p.name}</span>
-                      <div className="contrib-bar-wrap">
-                        <div className="contrib-bar" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="contrib-count">{count}h</span>
-                    </div>
-                  );
-                })}
+      <p style={{ fontSize: '0.78rem', color: 'var(--grey-600)', margin: '10px 0 0' }}>
+        Fourball &middot; better ball &middot; {modeLabel} &middot; thru {maxThru}
+      </p>
+
+      <div className="gm-lb-colheader">
+        <span style={{ width: 16 }}>#</span>
+        <span style={{ flex: 1 }}>Player</span>
+        <span style={{ width: 42, textAlign: 'right' }}>{colA}</span>
+        <span style={{ width: 46, textAlign: 'right' }}>{colB}</span>
+        <span style={{ width: 34, textAlign: 'right' }}>Thru</span>
+      </div>
+
+      {sorted.map((r, i) => {
+        const key = `${r.teamIndex}-${r.playerIndex}`;
+        const open = openKey === key;
+        const grid = open ? getPlayerHoleGrid(scores, adjTeams, r.teamIndex, r.player, r.playerIndex, course.holes) : null;
+        const toParColor = tab === 'match'
+          ? (r.up > 0 ? '#0a8f4d' : r.up === 0 ? '#0e1a13' : '#c8332c')
+          : (r.toPar < 0 ? '#00803f' : r.toPar === 0 ? '#0e1a13' : '#5b6b62');
+
+        return (
+          <div key={key} className={`gm-lb-row${open ? ' open' : ''}`}>
+            <div className="gm-lb-row-main" onClick={() => setOpenKey(open ? null : key)}>
+              <span className="gm-lb-rank">{i + 1}</span>
+              <div className="gm-lb-name-col">
+                <div className="gm-lb-name-row">
+                  <span className="gm-lb-name">{r.player.name}</span>
+                  <span className={`gm-lb-team-tag ${r.teamLabel.toLowerCase()}`}>{r.teamLabel}</span>
+                </div>
+                <div className="gm-lb-meta">hcp {r.player.handicap} net {r.net}</div>
               </div>
-            ))}
+              <span className="gm-lb-gross">{tab === 'match' ? r.teamLabel : (tab === 'net' ? r.net : r.gross)}</span>
+              <span className="gm-lb-topar" style={{ color: toParColor }}>
+                {tab === 'match' ? fmtUp(r.up) : fmtToPar(r.toPar)}
+              </span>
+              <span className="gm-lb-thru">{r.thru}</span>
+            </div>
+
+            {open && grid && (
+              <div className="gm-lb-card">
+                <HalfGrid half={grid.out} label="Out" />
+                <HalfGrid half={grid.in} label="In" />
+                <div className="gm-lb-foot">
+                  <span className="gm-lb-foot-line">Par {r.par} &middot; gross {r.gross} &middot; net {r.net} &middot; position {i + 1}</span>
+                  <span className="gm-lb-foot-hint">tap to close</span>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="contrib-legend">
-            Highlighted cells = player whose score counted for their team on that hole
-          </div>
+        );
+      })}
+
+      {onEndGame && (
+        <div style={{ marginTop: 16 }}>
+          <button className="gm-lb-end-btn" onClick={onEndGame}>End game</button>
         </div>
       )}
-
-      <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)', textAlign: 'center', marginTop: 8 }}>
-        ○ = matchplay stroke vs best player · W=Win, L=Loss, H=Halved
-        <br />Course HCP = HCP Index × {course.slopeRating}/113 + ({course.courseRating}−{course.par}) · Slope {course.slopeRating} / CR {course.courseRating}
-      </div>
     </div>
   );
 }

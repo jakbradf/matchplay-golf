@@ -94,6 +94,17 @@ export function getHoleResult(holeScores, teams, hole) {
   return { team0points: 0, team1points: 0, result: 'halved' };
 }
 
+// Per-hole match result for each hole: 1 (team0 won) / -1 (team1 won) / 0 (halved) / null (incomplete)
+export function getHoleResultsSeries(allHoleScores, teams, courseHoles) {
+  return courseHoles.map((hole) => {
+    const holeScores = allHoleScores[String(hole.number)];
+    const result = getHoleResult(holeScores, teams, hole);
+    if (!result) return null;
+    if (result.result === 'halved') return 0;
+    return result.result === 'team0' ? 1 : -1;
+  });
+}
+
 // Get running match score (like "3 UP" or "ALL SQUARE")
 export function getMatchStatus(cumulativeScores, teamNames) {
   const diff = cumulativeScores[0] - cumulativeScores[1];

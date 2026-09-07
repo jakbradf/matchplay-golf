@@ -2,16 +2,17 @@ import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../hooks/useGame';
 import Header from '../components/Header';
-import MatchStatusBar from '../components/MatchStatusBar';
-import ScoreInput from '../components/ScoreInput';
+import MatchStateBlock from '../components/MatchStateBlock';
+import SettledHoleBadge from '../components/SettledHoleBadge';
+import GmPlayerScoreRow from '../components/GmPlayerScoreRow';
 import ClosestToPinSelector from '../components/ClosestToPinSelector';
 import Scorecard from '../components/Scorecard';
 import { updateGame, saveHoleScores } from '../firebase/gameService';
-import { getTeamBestNet, getHoleResult, computeMatchScore, getMatchStatus, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
-import { ChevronLeftIcon, ChevronRightIcon, ShareIcon } from '../components/GolfIcon';
+import { getTeamBestNet, getHoleResult, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
+import { ShareIcon, ChevronLeftIcon } from '../components/GolfIcon';
 
 // ===== LOBBY =====
-function LobbyView({ game, gameCode, navigate }) {
+function LobbyView({ game, gameCode }) {
   const [starting, setStarting] = useState(false);
 
   const startGame = async () => {
@@ -80,6 +81,7 @@ function LobbyView({ game, gameCode, navigate }) {
 
 // ===== HOLE SCORING =====
 function HoleScoringView({ game, scores, course, gameCode, onShare }) {
+  const navigate = useNavigate();
   const [currentHole, setCurrentHole] = useState(game.currentHole || 1);
   const [localScores, setLocalScores] = useState({});
   const [saving, setSaving] = useState(false);
@@ -94,7 +96,6 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
     team1: { ...savedHoleScores.team1, ...localScores.team1 },
   };
 
-  // Figure out closestToPin from effectiveScores
   const closestTeam =
     effectiveScores.team0?.closestToPin === true ? 0 :
     effectiveScores.team1?.closestToPin === true ? 1 : null;
@@ -111,7 +112,6 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   }, []);
 
   const handleClosestChange = useCallback((teamIdx) => {
-    // teamIdx = null means neither
     setLocalScores(prev => ({
       ...prev,
       team0: { ...(prev.team0 || {}), closestToPin: teamIdx === 0 },
@@ -133,7 +133,6 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   }, [savedHoleScores]);
 
   const saveCurrentHole = async () => {
-    // Merge local into saved
     const toSave = {
       team0: { ...savedHoleScores.team0, ...localScores.team0 },
       team1: { ...savedHoleScores.team1, ...localScores.team1 },
@@ -155,30 +154,15 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
     await updateGame(gameCode, { currentHole: holeNum });
   };
 
-  const goNext = () => {
-    if (currentHole < 18) goToHole(currentHole + 1);
-  };
-
-  const goPrev = () => {
-    if (currentHole > 1) goToHole(currentHole - 1);
-  };
+  const goNext = () => goToHole(Math.min(18, currentHole + 1));
+  const goPrev = () => goToHole(Math.max(1, currentHole - 1));
 
   const finishGame = async () => {
     await saveCurrentHole();
     await updateGame(gameCode, { status: 'complete' });
   };
 
-  // Count completed holes (both teams have at least one score)
-  const completedHoles = course.holes.filter((h) => {
-    const hs = scores[String(h.number)];
-    return (
-      hs &&
-      (hs.team0?.player0gross != null || hs.team1?.player0gross != null)
-    );
-  });
-
   const allHoleScores = { ...scores };
-  // Apply local scores for match status display
   if (Object.keys(localScores).length > 0) {
     allHoleScores[String(currentHole)] = {
       ...allHoleScores[String(currentHole)],
@@ -189,12 +173,36 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
 
   const adjTeams = adjustTeamsForCourse(game.teams, course);
   const holeResult = getHoleResult(effectiveScores, adjTeams, hole);
+  const allPlayers = adjTeams.flatMap(t => t.players);
+  const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
+
+  const nextLabel = currentHole >= 18 ? 'Finish' : (holeResult ? `Hole ${currentHole + 1}` : 'Skip ahead');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <MatchStatusBar scores={allHoleScores} teams={adjTeams} courseHoles={course.holes} />
+      {/* Bespoke scoring header — game/course row, then the hole itself */}
+      <div className="gm-score-header">
+        <div className="gm-score-header-row1">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <button
+              onClick={() => navigate('/')}
+              aria-label="Back to home"
+              style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <ChevronLeftIcon size={18} color="#5b6b62" />
+            </button>
+            <span className="gm-score-eyebrow">{game.teams[0].name} vs {game.teams[1].name}</span>
+          </div>
+          <span className="gm-score-course">{course.name}</span>
+        </div>
+        <div className="gm-score-header-row2">
+          <span className="gm-hole-number">Hole {hole.number}</span>
+          <span className="gm-hole-meta">Par {hole.par} &middot; SI {hole.strokeIndex} &middot; {hole.distance} m</span>
+        </div>
+      </div>
 
-      {/* In-page share bar — safe from iOS top-bar clipping */}
+      <MatchStateBlock scores={allHoleScores} teams={adjTeams} courseHoles={course.holes} currentHole={currentHole} />
+
       <div className="game-share-bar">
         <div className="game-share-code">
           Code: <strong>{gameCode}</strong>
@@ -222,89 +230,54 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
 
       {activeTab === 'score' && (
         <>
-          <div style={{ padding: '16px 16px 0' }}>
-            {/* Hole selector grid */}
-            <div className="hole-selector-grid">
-              {course.holes.map((h) => {
-                const isCompleted = completedHoles.some(ch => ch.number === h.number);
-                const isActive = h.number === currentHole;
-                return (
-                  <button
-                    key={h.number}
-                    className={`hole-selector-btn${isActive ? ' active' : ''}${!isActive && isCompleted ? ' completed' : ''}`}
-                    onClick={() => h.number !== currentHole && goToHole(h.number)}
-                  >
-                    {h.number}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Hole info */}
-            <div className="hole-info-header">
-              <div className="hole-stat">
-                <div className="hole-stat-label">Hole</div>
-                <div className="hole-stat-value">{hole.number}</div>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
+            {holeResult && (
+              <div style={{ padding: '4px 20px 0' }}>
+                <SettledHoleBadge
+                  result={holeResult.result}
+                  winningTeamName={holeResult.result !== 'halved' ? adjTeams[parseInt(holeResult.result.replace('team', ''), 10)].name : null}
+                  net0={getTeamBestNet(effectiveScores.team0, adjTeams[0].players, hole, minHandicap)}
+                  net1={getTeamBestNet(effectiveScores.team1, adjTeams[1].players, hole, minHandicap)}
+                />
               </div>
-              <div className="hole-stat">
-                <div className="hole-stat-label">Par</div>
-                <div className={`hole-stat-value${hole.isParThree ? ' par-3' : ''}`}>{hole.par}</div>
-              </div>
-              <div className="hole-stat">
-                <div className="hole-stat-label">Dist</div>
-                <div className="hole-stat-value" style={{ fontSize: '1rem' }}>{hole.distance}m</div>
-              </div>
-              <div className="hole-stat">
-                <div className="hole-stat-label">SI</div>
-                <div className="hole-stat-value">{hole.strokeIndex}</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ padding: '0 16px', flex: 1, overflowY: 'auto', paddingBottom: 100 }}>
-            {/* Closest to pin — for par 3s, shown above team sections */}
-            {hole.isParThree && (
-              <ClosestToPinSelector
-                teams={game.teams}
-                closestTeam={closestTeam}
-                onChange={handleClosestChange}
-              />
             )}
 
-            {/* Team score sections */}
-            {(() => {
-              const allPlayers = adjTeams.flatMap(t => t.players);
-              const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
-              return adjTeams.map((team, ti) => {
-                const teamScores = effectiveScores[`team${ti}`] || {};
-                const bestNet = getTeamBestNet(teamScores, team.players, hole, minHandicap);
-                return (
-                  <div key={ti} className="team-scoring-section">
-                    <div className="team-scoring-header">
-                      <span className="team-scoring-name">{team.name}</span>
-                      {bestNet !== Infinity && (
-                        <span className="team-best-net">Best net: {bestNet}</span>
-                      )}
-                    </div>
-                    {team.players.map((player, pi) => (
-                      <ScoreInput
-                        key={pi}
-                        player={player}
-                        playerIndex={pi}
-                        hole={hole}
-                        gross={teamScores[`player${pi}gross`] ?? null}
-                        onChange={(val) => handleScoreChange(ti, pi, val)}
-                        matchplayStrokes={getMatchplayStrokes(player.handicap, minHandicap, hole.strokeIndex)}
-                      />
-                    ))}
-                  </div>
-                );
-              });
-            })()}
+            {hole.isParThree && (
+              <div style={{ padding: '0 20px' }}>
+                <ClosestToPinSelector
+                  teams={game.teams}
+                  closestTeam={closestTeam}
+                  onChange={handleClosestChange}
+                />
+              </div>
+            )}
 
-            {/* Extra points */}
+            {adjTeams.map((team, ti) => {
+              const teamScores = effectiveScores[`team${ti}`] || {};
+              const bestNet = getTeamBestNet(teamScores, team.players, hole, minHandicap);
+              return (
+                <div key={ti} className={`gm-team-block${ti === 1 ? ' alt' : ''}${holeResult && holeResult.result === `team${ti}` ? ' winner' : ''}`}>
+                  <div className="gm-team-header">
+                    <span className="gm-team-mark" style={{ background: ti === 0 ? '#00a651' : '#8fa197' }} />
+                    <span className="gm-team-name">{team.name}</span>
+                    <span className="gm-team-best">{bestNet !== Infinity ? `net ${bestNet}` : '—'}</span>
+                  </div>
+                  {team.players.map((player, pi) => (
+                    <GmPlayerScoreRow
+                      key={pi}
+                      player={player}
+                      hole={hole}
+                      gross={teamScores[`player${pi}gross`] ?? null}
+                      onChange={(val) => handleScoreChange(ti, pi, val)}
+                      strokes={getMatchplayStrokes(player.handicap, minHandicap, hole.strokeIndex)}
+                    />
+                  ))}
+                </div>
+              );
+            })}
+
             <div className="extra-points">
-              <div className="extra-points-label">⭐ Extra Points</div>
+              <div className="extra-points-label">Extra Points</div>
               <div className="extra-points-teams">
                 {game.teams.map((team, ti) => {
                   const pts = effectiveScores[`team${ti}`]?.extraPoints || 0;
@@ -317,7 +290,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
                           onClick={() => handleExtraPointChange(ti, -1)}
                           disabled={pts === 0}
                           aria-label="Remove extra point"
-                        >−</button>
+                        >&minus;</button>
                         <div className="score-display">{pts}</div>
                         <button
                           className="score-btn plus"
@@ -330,73 +303,18 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
                 })}
               </div>
             </div>
-
-            {/* Hole result preview */}
-            {holeResult && (
-              <div style={{
-                textAlign: 'center',
-                padding: '12px',
-                borderRadius: 'var(--radius-md)',
-                background: holeResult.result === 'halved' ? 'var(--grey-100)' : 'var(--green-light)',
-                color: holeResult.result === 'halved' ? 'var(--grey-700)' : 'var(--green-dark)',
-                fontWeight: 700,
-                fontSize: '0.9375rem',
-                marginBottom: 8,
-                border: `1px solid ${holeResult.result === 'halved' ? 'var(--grey-300)' : 'var(--green-mid)'}`,
-              }}>
-                {holeResult.result === 'halved'
-                  ? 'Hole Halved'
-                  : `${game.teams[parseInt(holeResult.result.replace('team', ''))].name} wins hole`}
-                {holeResult.team0points + holeResult.team1points > 1
-                  ? ` (+${Math.max(holeResult.team0points, holeResult.team1points)} pts)`
-                  : ''}
-              </div>
-            )}
-
-            {/* Save button */}
-            <button
-              className="btn btn-primary btn-full"
-              onClick={saveCurrentHole}
-              disabled={saving}
-              style={{ marginBottom: 8 }}
-            >
-              {saving ? 'Saving...' : 'Save Scores'}
-            </button>
-
-            {currentHole === 18 && (
-              <button
-                className="btn btn-secondary btn-full"
-                onClick={finishGame}
-                disabled={saving}
-              >
-                Finish Game
-              </button>
-            )}
           </div>
 
-          {/* Sticky hole navigation */}
-          <div className="hole-nav">
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={goPrev}
-              disabled={currentHole === 1}
-              style={{ minWidth: 100 }}
-            >
-              <ChevronLeftIcon size={16} />
-              Prev
+          <div className="gm-score-footer">
+            <button className="gm-footer-back" onClick={goPrev} disabled={currentHole === 1 || saving}>
+              Back
             </button>
-
-            <span style={{ fontSize: '0.875rem', color: 'var(--grey-600)', fontWeight: 600 }}>
-              {currentHole} / 18
-            </span>
-
             <button
-              className="btn btn-primary btn-sm"
-              onClick={currentHole === 18 ? finishGame : goNext}
-              style={{ minWidth: 100 }}
+              className="gm-footer-primary"
+              onClick={currentHole >= 18 ? finishGame : goNext}
+              disabled={saving}
             >
-              {currentHole === 18 ? 'Finish' : 'Next'}
-              {currentHole !== 18 && <ChevronRightIcon size={16} />}
+              {nextLabel}
             </button>
           </div>
         </>
@@ -449,12 +367,6 @@ export default function GameView() {
     return null;
   }
 
-  const title = game.status === 'lobby'
-    ? 'Game Lobby'
-    : course
-      ? `Hole ${game.currentHole} — ${course.name.split(' ')[0]}`
-      : 'Scoring';
-
   const watchUrl = `${window.location.origin}/game/${code}/watch`;
   const shareWatch = () => {
     if (navigator.share) {
@@ -466,10 +378,11 @@ export default function GameView() {
 
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column' }}>
-      <Header title={title} showBack backTo="/" />
-
       {game.status === 'lobby' && (
-        <LobbyView game={game} gameCode={code} navigate={navigate} />
+        <>
+          <Header title="Game Lobby" showBack backTo="/" />
+          <LobbyView game={game} gameCode={code} />
+        </>
       )}
 
       {game.status === 'active' && course && (

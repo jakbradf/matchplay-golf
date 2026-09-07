@@ -1,6 +1,25 @@
+// The fourth chip covers "par+2 or worse": first tap sets double bogey, tapping it
+// again while selected cycles further up (triple, quadruple, ...) before wrapping
+// back to empty. This keeps exactly four chips and the original one-tap behaviour
+// for birdie/par/bogey, while still reaching scores the design's flat par+2 cap can't.
+const OVERFLOW_CAP = 4; // extra strokes past par+2 before the cycle wraps to empty
+
 export default function GmPlayerScoreRow({ player, hole, gross, onChange, strokes = 0 }) {
-  const chipValues = [hole.par - 1, hole.par, hole.par + 1, hole.par + 2];
+  const chipValues = [hole.par - 1, hole.par, hole.par + 1];
+  const overflowBase = hole.par + 2;
   const net = gross != null ? gross - strokes : null;
+  const overflowSelected = gross != null && gross >= overflowBase;
+  const overflowLabel = overflowSelected ? gross : overflowBase;
+
+  const handleOverflowClick = () => {
+    if (!overflowSelected) {
+      onChange(overflowBase);
+    } else if (gross >= overflowBase + OVERFLOW_CAP) {
+      onChange(null);
+    } else {
+      onChange(gross + 1);
+    }
+  };
 
   return (
     <div className="gm-player-row">
@@ -30,6 +49,14 @@ export default function GmPlayerScoreRow({ player, hole, gross, onChange, stroke
             {v}
           </button>
         ))}
+        <button
+          className={`gm-chip${overflowSelected ? ' selected' : ''}`}
+          onClick={handleOverflowClick}
+          aria-label={overflowSelected ? `Score ${overflowLabel}, tap to increase` : `Score ${overflowBase} or worse`}
+          title={overflowSelected ? 'Tap to increase' : undefined}
+        >
+          {overflowLabel}
+        </button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { getNetScore } from './scoring';
+import { getStrokesOnHole } from './scoring';
 
 export const MIN_CONTRIBUTION_HOLES = 3;
 
@@ -20,13 +20,18 @@ export function getGrossPoints(gross, hole) {
   return getStablefordPoints(gross, hole.par, gross === 1);
 }
 
-// Net points — standard net Stableford: the player's own course handicap
-// allocates strokes per hole (by stroke index), then the same points ladder
-// applies to the net score. A literal ace is still gross===1, not net===1.
+// Net points — the gross-score tier (bogey/par/birdie/eagle) plus a flat bonus of
+// one point per handicap stroke received on the hole. Strokes add points on top of
+// whatever tier the gross score already earned; they never promote a score into a
+// higher tier (a net birdie still needs an actual gross birdie), and since gross
+// points never go below 0, strokes can only add — never subtract. A literal ace
+// stays a fixed 10 regardless of handicap.
 export function getNetPoints(gross, handicap, hole) {
   if (gross == null) return null;
-  const net = getNetScore(gross, handicap, hole.strokeIndex);
-  return getStablefordPoints(net, hole.par, gross === 1);
+  if (gross === 1) return 10;
+  const grossPoints = getStablefordPoints(gross, hole.par, false);
+  const strokesReceived = getStrokesOnHole(handicap, hole.strokeIndex);
+  return grossPoints + strokesReceived;
 }
 
 // Best-of-two-players points for a team on one hole ("fourball" — better ball).

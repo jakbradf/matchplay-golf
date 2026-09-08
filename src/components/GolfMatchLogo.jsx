@@ -1,43 +1,24 @@
 // GOLF MATCH mark: two settled-hole bars rising into a flagstick + pennant.
 // Same shape that carries match state on the scoring screen (the hole strip),
-// compressed into a signature. Geometry is proportional to `size` (S).
-export function GolfMatchMark({ size = 28, primary = '#00a651', secondary = '#0e1a13', ground, radius = 0 }) {
-  const S = size;
-  const gap = 0.055 * S;
-  const barW = 0.095 * S;
-  const stickW = 0.059 * S;
+// compressed into a signature. Exact geometry from the master brand SVGs
+// (100-unit design grid) — ground is white by default (the "mark-green" variant:
+// ink bars, green pin); pass primary/secondary to reproduce the other variants
+// (white-on-green, mint-on-dark, one-colour ink).
+export function GolfMatchMark({ size = 28, primary = '#00a651', secondary = '#0e1a13' }) {
   return (
-    <div
-      style={{
-        width: S,
-        height: S,
-        borderRadius: radius,
-        background: ground ?? 'transparent',
-        boxSizing: 'border-box',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        gap,
-        padding: `0 ${0.17 * S + gap}px ${0.2 * S}px ${gap}px`,
-        flexShrink: 0,
-      }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="23.55 28 49.655 52"
+      preserveAspectRatio="xMidYMid meet"
+      style={{ flexShrink: 0 }}
+      aria-hidden="true"
     >
-      <div style={{ width: barW, height: (0.52 * S * 9) / 18, borderRadius: barW / 3, background: secondary }} />
-      <div style={{ width: barW, height: (0.52 * S * 13) / 18, borderRadius: barW / 3, background: secondary }} />
-      <div style={{ position: 'relative', width: stickW, height: 0.52 * S, borderRadius: stickW / 2, background: primary }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: '100%',
-            top: 0,
-            width: 0.17 * S,
-            height: 0.13 * S,
-            background: primary,
-            clipPath: 'polygon(0 0, 100% 46%, 0 92%)',
-          }}
-        />
-      </div>
-    </div>
+      <rect x="23.55" y="54" width="9.5" height="26" rx="3.1666666666666665" fill={secondary} />
+      <rect x="38.55" y="42.44444444444444" width="9.5" height="37.55555555555556" rx="3.1666666666666665" fill={secondary} />
+      <rect x="53.55" y="28" width="5.9" height="52" rx="2.95" fill={primary} />
+      <path d="M56.205 28 L73.205 33.94 L56.205 39.88 Z" fill={primary} />
+    </svg>
   );
 }
 

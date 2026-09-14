@@ -1,15 +1,33 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
+import PlayerClaimList from '../components/PlayerClaimList';
 import { getGame } from '../firebase/gameService';
+import { useAuth } from '../contexts/AuthContext';
+import { signInWithGoogle } from '../firebase/authService';
+import { GoogleIcon } from '../components/GolfIcon';
 
 export default function JoinGame() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
   const [code, setCode] = useState(searchParams.get('code') || '');
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [guestMode, setGuestMode] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+
+  const handleSignIn = async () => {
+    setSigningIn(true);
+    try {
+      await signInWithGoogle();
+    } catch {
+      // user cancelled
+    } finally {
+      setSigningIn(false);
+    }
+  };
 
   const handleLookup = async () => {
     const trimmed = code.trim().toUpperCase();
@@ -99,29 +117,56 @@ export default function JoinGame() {
               </div>
             </div>
 
-            {game.teams.map((team, ti) => (
-              <div className="card mt-8" key={ti}>
-                <p className="section-title-sm">{team.name}</p>
-                <ul className="players-list">
-                  {team.players.map((p, pi) => (
-                    <li key={pi} className="player-item">
-                      <span>{p.name}</span>
-                      <span className="player-hcp">HCP {p.handicap}</span>
-                    </li>
-                  ))}
-                </ul>
+            {!authLoading && !user && !guestMode && (
+              <div className="card mt-12" style={{ textAlign: 'center' }}>
+                <p className="section-title-sm">Who's Joining?</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--grey-600)', marginBottom: 16 }}>
+                  Sign in to claim your player and keep your profile and photo across games, or continue as a guest.
+                </p>
+                <button className="btn btn-primary btn-full" onClick={handleSignIn} disabled={signingIn}>
+                  <GoogleIcon size={18} />
+                  {signingIn ? 'Signing in…' : 'Sign in with Google'}
+                </button>
+                <button
+                  className="btn btn-secondary btn-full mt-8"
+                  onClick={() => setGuestMode(true)}
+                >
+                  Continue as Guest
+                </button>
               </div>
-            ))}
+            )}
 
-            <div style={{ marginTop: 24 }}>
-              <button
-                className="btn btn-primary btn-full"
-                style={{ minHeight: 60, fontSize: '1.1rem' }}
-                onClick={handleJoin}
-              >
-                Enter Game
-              </button>
-            </div>
+            {(user || guestMode) && (
+              user ? (
+                <PlayerClaimList game={game} gameCode={code.trim().toUpperCase()} />
+              ) : (
+                game.teams.map((team, ti) => (
+                  <div className="card mt-8" key={ti}>
+                    <p className="section-title-sm">{team.name}</p>
+                    <ul className="players-list">
+                      {team.players.map((p, pi) => (
+                        <li key={pi} className="player-item">
+                          <span>{p.name}</span>
+                          <span className="player-hcp">HCP {p.handicap}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )
+            )}
+
+            {(user || guestMode) && (
+              <div style={{ marginTop: 24 }}>
+                <button
+                  className="btn btn-primary btn-full"
+                  style={{ minHeight: 60, fontSize: '1.1rem' }}
+                  onClick={handleJoin}
+                >
+                  Enter Game
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

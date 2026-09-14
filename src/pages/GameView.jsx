@@ -1,14 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../hooks/useGame';
-import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import MatchStateBlock from '../components/MatchStateBlock';
 import SettledHoleBadge from '../components/SettledHoleBadge';
 import GmPlayerScoreRow from '../components/GmPlayerScoreRow';
 import ClosestToPinSelector from '../components/ClosestToPinSelector';
 import Scorecard from '../components/Scorecard';
-import PlayerAvatar from '../components/PlayerAvatar';
+import PlayerClaimList from '../components/PlayerClaimList';
 import { updateGame, saveHoleScores } from '../firebase/gameService';
 import { getTeamBestNet, getHoleResult, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
 import { ShareIcon, ChevronLeftIcon } from '../components/GolfIcon';
@@ -16,8 +15,6 @@ import { ShareIcon, ChevronLeftIcon } from '../components/GolfIcon';
 // ===== LOBBY =====
 function LobbyView({ game, gameCode }) {
   const [starting, setStarting] = useState(false);
-  const [claimingKey, setClaimingKey] = useState(null);
-  const { user } = useAuth();
 
   const startGame = async () => {
     setStarting(true);
@@ -26,70 +23,6 @@ function LobbyView({ game, gameCode }) {
     } catch (e) {
       console.error(e);
       setStarting(false);
-    }
-  };
-
-  const myClaimedKey = (() => {
-    for (let t = 0; t < game.teams.length; t++) {
-      for (let p = 0; p < game.teams[t].players.length; p++) {
-        if (game.teams[t].players[p].uid === user?.uid) return `t${t}p${p}`;
-      }
-    }
-    return null;
-  })();
-
-  const claimPlayer = async (teamIdx, playerIdx) => {
-    if (!user) return;
-    const key = `t${teamIdx}p${playerIdx}`;
-    setClaimingKey(key);
-    try {
-      await updateGame(gameCode, {
-        teams: game.teams.map((team, t) => ({
-          ...team,
-          players: team.players.map((player, p) => {
-            if (t === teamIdx && p === playerIdx) {
-              return {
-                ...player,
-                uid: user.uid,
-                name: user.displayName || player.name,
-                photoURL: user.photoURL || null,
-              };
-            }
-            if (player.uid === user.uid) {
-              const { uid: _uid, ...rest } = player;
-              return rest;
-            }
-            return player;
-          }),
-        })),
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setClaimingKey(null);
-    }
-  };
-
-  const unclaimPlayer = async (teamIdx, playerIdx) => {
-    const key = `t${teamIdx}p${playerIdx}`;
-    setClaimingKey(key);
-    try {
-      await updateGame(gameCode, {
-        teams: game.teams.map((team, t) => ({
-          ...team,
-          players: team.players.map((player, p) => {
-            if (t === teamIdx && p === playerIdx) {
-              const { uid: _uid, ...rest } = player;
-              return rest;
-            }
-            return player;
-          }),
-        })),
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setClaimingKey(null);
     }
   };
 
@@ -103,51 +36,7 @@ function LobbyView({ game, gameCode }) {
         <div className="game-code-hint">{game.course.name}</div>
       </div>
 
-      {user && (
-        <p className="lobby-claim-hint">
-          Tap <strong>Claim</strong> next to your name to link your profile.
-        </p>
-      )}
-
-      {game.teams.map((team, ti) => (
-        <div className="card mt-8" key={ti}>
-          <p className="section-title-sm">{team.name}</p>
-          <ul className="players-list">
-            {team.players.map((p, pi) => {
-              const key = `t${ti}p${pi}`;
-              const isMine = p.uid === user?.uid;
-              const busy = claimingKey === key;
-              return (
-                <li key={pi} className="player-item player-item-lobby">
-                  <PlayerAvatar name={p.name} photoURL={p.photoURL} size={36} />
-                  <div className="player-item-info">
-                    <span>{p.name}{isMine && <span className="player-claimed-you">You</span>}</span>
-                    <span className="player-hcp">HCP {p.handicap}</span>
-                  </div>
-                  {user && !p.uid && !myClaimedKey && (
-                    <button
-                      className="player-claim-btn"
-                      onClick={() => claimPlayer(ti, pi)}
-                      disabled={busy}
-                    >
-                      {busy ? '…' : 'Claim'}
-                    </button>
-                  )}
-                  {isMine && (
-                    <button
-                      className="player-unclaim-btn"
-                      onClick={() => unclaimPlayer(ti, pi)}
-                      disabled={busy}
-                    >
-                      {busy ? '…' : 'Unclaim'}
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+      <PlayerClaimList game={game} gameCode={gameCode} />
 
       <div style={{ marginTop: 24 }}>
         <button

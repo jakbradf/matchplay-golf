@@ -6,8 +6,10 @@ import { ALL_COURSES } from '../data/courses';
 import { loadPublicCourses } from '../firebase/courseService';
 import { createGame } from '../firebase/gameService';
 import { getCourseHandicap } from '../utils/scoring';
-import { ShareIcon, CloseIcon, SearchIcon, PlusIcon } from '../components/GolfIcon';
+import { ShareIcon, CloseIcon, SearchIcon, PlusIcon, CameraIcon } from '../components/GolfIcon';
 import { useAuth } from '../contexts/AuthContext';
+import PlayerAvatar from '../components/PlayerAvatar';
+import StoredPlayerPicker from '../components/StoredPlayerPicker';
 
 // ========== STEP 1: Course Selection ==========
 function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext, onCreateCourse }) {
@@ -114,7 +116,7 @@ function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext, onCr
 
 // ========== STEP 2: Team Setup ==========
 function makePlayer() {
-  return { name: '', handicap: '' };
+  return { name: '', handicap: '', photoURL: null };
 }
 
 function makeTeam(num) {
@@ -123,6 +125,7 @@ function makeTeam(num) {
 
 function StepTeams({ teams, onChange, onNext, onBack }) {
   const [errors, setErrors] = useState({});
+  const [pickerFor, setPickerFor] = useState(null); // { ti, pi } | null
 
   const updateTeamName = (ti, val) => {
     const updated = teams.map((t, i) => (i === ti ? { ...t, name: val } : t));
@@ -135,6 +138,15 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
       const players = t.players.map((p, j) =>
         j === pi ? { ...p, [field]: val } : p
       );
+      return { ...t, players };
+    });
+    onChange(updated);
+  };
+
+  const applyPickedPlayer = (ti, pi, picked) => {
+    const updated = teams.map((t, i) => {
+      if (i !== ti) return t;
+      const players = t.players.map((p, j) => (j === pi ? { ...p, ...picked } : p));
       return { ...t, players };
     });
     onChange(updated);
@@ -199,6 +211,16 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
 
             {team.players.map((player, pi) => (
               <div key={pi} className="player-row">
+                <button
+                  type="button"
+                  className="player-row-photo-btn"
+                  onClick={() => setPickerFor({ ti, pi })}
+                  aria-label={player.photoURL ? `Change photo for ${player.name || 'player'}` : `Add photo for ${player.name || 'player'}`}
+                >
+                  {player.photoURL
+                    ? <PlayerAvatar name={player.name} photoURL={player.photoURL} size={40} />
+                    : <div className="picker-photo-placeholder"><CameraIcon size={16} color="var(--grey-500)" /></div>}
+                </button>
                 <div className="player-row-inner">
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">
@@ -263,6 +285,15 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
           Continue
         </button>
       </div>
+
+      {pickerFor && (
+        <StoredPlayerPicker
+          currentName={teams[pickerFor.ti].players[pickerFor.pi].name}
+          currentHandicap={teams[pickerFor.ti].players[pickerFor.pi].handicap}
+          onSelect={(picked) => applyPickedPlayer(pickerFor.ti, pickerFor.pi, picked)}
+          onClose={() => setPickerFor(null)}
+        />
+      )}
     </div>
   );
 }

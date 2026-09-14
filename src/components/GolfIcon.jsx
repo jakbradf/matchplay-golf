@@ -97,6 +97,26 @@ export function UserIcon({ size = 20, color = 'currentColor' }) {
   );
 }
 
+export function UsersIcon({ size = 20, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="7.5" cy="6.5" r="2.8" stroke={color} strokeWidth="1.6"/>
+      <path d="M2.2 16c0-2.7 2.4-4.7 5.3-4.7s5.3 2 5.3 4.7" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M13 4.8c1.3.3 2.3 1.4 2.3 2.7 0 1.2-.8 2.2-1.9 2.6" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M14.2 11.6c1.9.5 3.3 2 3.3 3.9" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+export function CameraIcon({ size = 20, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 7.2c0-.7.6-1.2 1.2-1.2h1.4l.7-1.3c.2-.4.6-.6 1-.6h3.4c.4 0 .8.2 1 .6l.7 1.3h1.4c.7 0 1.2.5 1.2 1.2v6.6c0 .7-.5 1.2-1.2 1.2H4.2c-.7 0-1.2-.5-1.2-1.2z" stroke={color} strokeWidth="1.6" strokeLinejoin="round"/>
+      <circle cx="10" cy="10.6" r="2.6" stroke={color} strokeWidth="1.6"/>
+    </svg>
+  );
+}
+
 export function SearchIcon({ size = 20, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

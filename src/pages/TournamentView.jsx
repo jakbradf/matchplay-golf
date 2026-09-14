@@ -108,7 +108,7 @@ function TournamentScoreInput({ player, hole, gross, onChange }) {
   return (
     <div className="player-score-row">
       <div className="player-score-info" style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <PlayerAvatar name={player.name} size={36} />
+        <PlayerAvatar name={player.name} photoURL={player.photoURL} size={36} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="player-score-name">{player.name}</div>
           {strokes > 0 && (

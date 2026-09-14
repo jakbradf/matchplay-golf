@@ -7,8 +7,10 @@ import { loadPublicCourses } from '../firebase/courseService';
 import { createTournament } from '../firebase/tournamentService';
 import { getCourseHandicap } from '../utils/scoring';
 import { MIN_CONTRIBUTION_HOLES } from '../utils/tournamentScoring';
-import { ShareIcon, CloseIcon, SearchIcon, PlusIcon } from '../components/GolfIcon';
+import { ShareIcon, CloseIcon, SearchIcon, PlusIcon, CameraIcon } from '../components/GolfIcon';
 import { useAuth } from '../contexts/AuthContext';
+import PlayerAvatar from '../components/PlayerAvatar';
+import StoredPlayerPicker from '../components/StoredPlayerPicker';
 
 // ========== STEP 1: Course Selection ==========
 function StepCourse({ selected, onSelect, onNext }) {
@@ -84,7 +86,7 @@ function StepCourse({ selected, onSelect, onNext }) {
 
 // ========== STEP 2: Teams ==========
 function makePlayer() {
-  return { name: '', handicap: '' };
+  return { name: '', handicap: '', photoURL: null };
 }
 
 function makeTeam(num) {
@@ -93,6 +95,7 @@ function makeTeam(num) {
 
 function StepTeams({ teams, onChange, onNext, onBack }) {
   const [errors, setErrors] = useState({});
+  const [pickerFor, setPickerFor] = useState(null); // { ti, pi } | null
 
   const updateTeamName = (ti, val) => {
     onChange(teams.map((t, i) => (i === ti ? { ...t, name: val } : t)));
@@ -102,6 +105,13 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
     onChange(teams.map((t, i) => {
       if (i !== ti) return t;
       return { ...t, players: t.players.map((p, j) => (j === pi ? { ...p, [field]: val } : p)) };
+    }));
+  };
+
+  const applyPickedPlayer = (ti, pi, picked) => {
+    onChange(teams.map((t, i) => {
+      if (i !== ti) return t;
+      return { ...t, players: t.players.map((p, j) => (j === pi ? { ...p, ...picked } : p)) };
     }));
   };
 
@@ -163,6 +173,16 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
 
             {team.players.map((player, pi) => (
               <div key={pi} className="player-row">
+                <button
+                  type="button"
+                  className="player-row-photo-btn"
+                  onClick={() => setPickerFor({ ti, pi })}
+                  aria-label={player.photoURL ? `Change photo for ${player.name || 'player'}` : `Add photo for ${player.name || 'player'}`}
+                >
+                  {player.photoURL
+                    ? <PlayerAvatar name={player.name} photoURL={player.photoURL} size={40} />
+                    : <div className="picker-photo-placeholder"><CameraIcon size={16} color="var(--grey-500)" /></div>}
+                </button>
                 <div className="player-row-inner">
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Player {pi + 1} Name</label>
@@ -203,6 +223,15 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
         <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onBack}>Back</button>
         <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleNext}>Continue</button>
       </div>
+
+      {pickerFor && (
+        <StoredPlayerPicker
+          currentName={teams[pickerFor.ti].players[pickerFor.pi].name}
+          currentHandicap={teams[pickerFor.ti].players[pickerFor.pi].handicap}
+          onSelect={(picked) => applyPickedPlayer(pickerFor.ti, pickerFor.pi, picked)}
+          onClose={() => setPickerFor(null)}
+        />
+      )}
     </div>
   );
 }
@@ -366,6 +395,7 @@ export default function CreateTournament() {
         players: team.players.map((p) => ({
           name: p.name.trim(),
           handicap: parseFloat(p.handicap),
+          ...(p.photoURL ? { photoURL: p.photoURL } : {}),
         })),
       }));
       const { code } = await createTournament({

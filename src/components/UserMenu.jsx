@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { signInWithGoogle, signOut } from '../firebase/authService';
-import { GoogleIcon, UserIcon, HistoryIcon } from './GolfIcon';
+import { GoogleIcon, UserIcon, HistoryIcon, UsersIcon } from './GolfIcon';
 
 export default function UserMenu() {
   const { user } = useAuth();
@@ -63,6 +63,13 @@ export default function UserMenu() {
           >
             <HistoryIcon size={16} color="var(--green-dark)" />
             My Rounds
+          </button>
+          <button
+            className="user-dropdown-item"
+            onClick={() => { navigate('/my-players'); setOpen(false); }}
+          >
+            <UsersIcon size={16} color="var(--green-dark)" />
+            My Players
           </button>
           <button
             className="user-dropdown-item user-dropdown-signout"

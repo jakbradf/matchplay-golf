@@ -180,12 +180,9 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
                     <input
                       className={`form-input form-input-sm${errors[`t${ti}p${pi}hcp`] ? ' error' : ''}`}
                       value={player.handicap}
-                      onChange={(e) => updatePlayer(ti, pi, 'handicap', e.target.value)}
+                      onChange={(e) => updatePlayer(ti, pi, 'handicap', e.target.value.replace(',', '.'))}
                       placeholder="0.0"
-                      type="number"
-                      min="0"
-                      max="54"
-                      step="0.1"
+                      type="text"
                       inputMode="decimal"
                     />
                     {errors[`t${ti}p${pi}hcp`] && <p className="form-error">{errors[`t${ti}p${pi}hcp`]}</p>}

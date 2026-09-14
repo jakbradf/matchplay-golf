@@ -6,7 +6,6 @@ const HALVE = '#1a1a1a';
 const EMPTY = '#eef2ef';
 const INK = '#0e1a13';
 const GREEN = '#00a651';
-const MUTED = '#5b6b62';
 
 function barStyle(result, isCurrent) {
   let bg = EMPTY, height = 3;
@@ -30,8 +29,9 @@ export default function MatchStateBlock({ scores, teams, courseHoles, currentHol
   const results = getHoleResultsSeries(scores, teams, courseHoles);
   const played = results.filter((r) => r != null).length;
 
-  const standingLabel = diff === 0 ? 'All square' : `${Math.abs(diff)} ${diff > 0 ? 'up' : 'down'}`;
-  const standingColor = diff === 0 ? INK : diff > 0 ? GREEN : MUTED;
+  const leadingTeam = diff > 0 ? teams[0] : teams[1];
+  const standingLabel = diff === 0 ? 'All square' : `${leadingTeam.name} ${Math.abs(diff)} up`;
+  const standingColor = diff === 0 ? INK : GREEN;
 
   return (
     <div className="gm-match-block">

@@ -628,6 +628,63 @@ body {
   font-weight: 600;
 }
 
+.lobby-claim-hint {
+  font-size: 0.8125rem;
+  color: var(--grey-600);
+  margin: 8px 0 0;
+}
+
+.player-item-lobby {
+  align-items: center;
+}
+
+.player-item-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+}
+
+.player-claimed-you {
+  margin-left: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  background: var(--green-light);
+  padding: 2px 6px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.player-claim-btn,
+.player-unclaim-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: var(--white);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.player-claim-btn {
+  border: 1px solid var(--green-dark);
+  color: var(--green-dark);
+}
+
+.player-unclaim-btn {
+  border: 1px solid var(--grey-300);
+  color: var(--grey-600);
+}
+
+.player-claim-btn:disabled,
+.player-unclaim-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ===== MATCH STATUS BAR ===== */
 .match-status-bar {
   background: var(--green-dark);
@@ -2143,35 +2200,6 @@ body {
   color: var(--grey-600);
   margin-top: 3px;
   font-variant-numeric: tabular-nums;
-}
-
-/* ---- score chips ---- */
-.gm-chip-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
-.gm-chip {
-  width: 46px;
-  height: 46px;
-  border-radius: 8px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  font: 500 16px/1 'Inter', sans-serif;
-  font-variant-numeric: tabular-nums;
-  border: 1px solid var(--grey-300);
-  background: transparent;
-  color: var(--grey-600);
-  font-family: var(--font);
-  transition: all 0.12s ease;
-}
-
-.gm-chip.selected {
-  border: 1px solid var(--green-dark);
-  background: var(--green-light);
-  color: var(--green-mid);
 }
 
 /* ---- footer ---- */

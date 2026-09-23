@@ -502,20 +502,10 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
                     {row.teamName} · HCP {row.handicap} · thru {row.holesPlayed}
                   </div>
                 </div>
-                {activeBoard === 'playerNet' ? (
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
-                      {row.netPoints}
-                      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> net</span>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>{row.grossPoints} gross</div>
-                  </div>
-                ) : (
-                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
-                    {row.grossPoints}
-                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
-                  </div>
-                )}
+                <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
+                  {activeBoard === 'playerNet' ? row.netPoints : row.grossPoints}
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
+                </div>
                 <span style={{ display: 'flex', flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none' }}>
                   <ChevronRightIcon size={16} color="var(--grey-400)" />
                 </span>

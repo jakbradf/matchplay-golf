@@ -380,9 +380,9 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
 
 // ===== LEADERBOARD =====
 const BOARD_TABS = [
-  { key: 'playerNet', label: 'Player', sub: '+ HCP' },
-  { key: 'teamNet', label: 'Team', sub: '+ HCP' },
-  { key: 'playerGross', label: 'TIGER', sub: 'Gross' },
+  { key: 'playerNet', label: 'Players' },
+  { key: 'teamNet', label: 'Teams' },
+  { key: 'playerGross', label: 'TIGER' },
 ];
 
 function scoreCellStyle(diff) {
@@ -471,10 +471,8 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
             key={b.key}
             className={`tab-btn${activeBoard === b.key ? ' active' : ''}`}
             onClick={() => setActiveBoard(b.key)}
-            style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, padding: '8px 4px' }}
           >
-            <span>{b.label}</span>
-            <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>{b.sub}</span>
+            {b.label}
           </button>
         ))}
       </div>

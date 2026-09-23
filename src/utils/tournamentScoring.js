@@ -1,7 +1,5 @@
 import { getStrokesOnHole } from './scoring';
 
-export const MIN_CONTRIBUTION_HOLES = 3;
-
 // Modified Stableford points for a score relative to par.
 // A literal ace (1 stroke, any hole) always scores 10, regardless of par.
 export function getStablefordPoints(strokes, par, isAce = false) {
@@ -34,50 +32,19 @@ export function getNetPoints(gross, handicap, hole) {
   return grossPoints + strokesReceived;
 }
 
-// Best-of-two-players points for a team on one hole ("fourball" — better ball).
-// mode: 'gross' | 'net'. Returns { points, contributors: [playerIndex, ...] }.
-// contributors lists every player whose score equalled the best (ties count for both).
-export function getTeamHolePoints(teamScores, teamPlayers, hole, mode = 'gross') {
-  if (!teamScores) return { points: null, contributors: [] };
-
-  const values = teamPlayers.map((p, i) => {
-    const gross = teamScores[`player${i}gross`];
-    if (gross == null) return null;
-    return mode === 'net' ? getNetPoints(gross, p.handicap, hole) : getGrossPoints(gross, hole);
-  });
-
-  const known = values.filter(v => v != null);
-  if (known.length === 0) return { points: null, contributors: [] };
-
-  const best = Math.max(...known);
-  const contributors = values.reduce((acc, v, i) => (v === best ? [...acc, i] : acc), []);
-  return { points: best, contributors };
-}
-
-// Sum a team's best-ball points across the round.
+// Team score is every player's own points added together and divided by the
+// number of players on the team — so a 3-player team is directly comparable
+// to a 2-player team instead of getting a best-ball advantage from the extra player.
 export function getTeamTotalPoints(allHoleScores, team, courseHoles, mode = 'gross') {
-  let total = 0;
-  let holesCounted = 0;
-  courseHoles.forEach((hole) => {
-    const teamScores = allHoleScores[String(hole.number)]?.[team.id];
-    const { points } = getTeamHolePoints(teamScores, team.players, hole, mode);
-    if (points != null) {
-      total += points;
-      holesCounted++;
-    }
+  let sum = 0;
+  let maxHolesPlayed = 0;
+  team.players.forEach((_, pi) => {
+    const { total, holesPlayed } = getPlayerTotalPoints(allHoleScores, team, pi, courseHoles, mode);
+    sum += total;
+    maxHolesPlayed = Math.max(maxHolesPlayed, holesPlayed);
   });
-  return { total, holesCounted };
-}
-
-// How many holes each team player's score counted as the team's best (per mode).
-export function computeContributions(allHoleScores, team, courseHoles, mode = 'gross') {
-  const counts = team.players.map(() => 0);
-  courseHoles.forEach((hole) => {
-    const teamScores = allHoleScores[String(hole.number)]?.[team.id];
-    const { contributors } = getTeamHolePoints(teamScores, team.players, hole, mode);
-    contributors.forEach((i) => counts[i]++);
-  });
-  return counts;
+  const playerCount = team.players.length || 1;
+  return { total: sum / playerCount, holesCounted: maxHolesPlayed };
 }
 
 // Sum one player's own points across the round (not best-ball — every hole they played).
@@ -170,8 +137,6 @@ export function buildLeaderboards(teams, allHoleScores, courseHoles) {
       grossPoints: gross.total,
       netPoints: net.total,
       holesCounted: gross.holesCounted,
-      grossContrib: computeContributions(allHoleScores, team, courseHoles, 'gross'),
-      netContrib: computeContributions(allHoleScores, team, courseHoles, 'net'),
     };
   });
 

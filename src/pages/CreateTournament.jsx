@@ -6,7 +6,6 @@ import { ALL_COURSES } from '../data/courses';
 import { loadPublicCourses } from '../firebase/courseService';
 import { createTournament } from '../firebase/tournamentService';
 import { getCourseHandicap } from '../utils/scoring';
-import { MIN_CONTRIBUTION_HOLES } from '../utils/tournamentScoring';
 import { ShareIcon, CloseIcon, SearchIcon, PlusIcon, CameraIcon } from '../components/GolfIcon';
 import { useAuth } from '../contexts/AuthContext';
 import PlayerAvatar from '../components/PlayerAvatar';
@@ -85,6 +84,9 @@ function StepCourse({ selected, onSelect, onNext }) {
 }
 
 // ========== STEP 2: Teams ==========
+const MIN_TEAM_PLAYERS = 2;
+const MAX_TEAM_PLAYERS = 4;
+
 function makePlayer() {
   return { name: '', handicap: '', photoURL: null };
 }
@@ -115,6 +117,20 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
     }));
   };
 
+  const addPlayer = (ti) => {
+    onChange(teams.map((t, i) => {
+      if (i !== ti || t.players.length >= MAX_TEAM_PLAYERS) return t;
+      return { ...t, players: [...t.players, makePlayer()] };
+    }));
+  };
+
+  const removePlayer = (ti, pi) => {
+    onChange(teams.map((t, i) => {
+      if (i !== ti || t.players.length <= MIN_TEAM_PLAYERS) return t;
+      return { ...t, players: t.players.filter((_, j) => j !== pi) };
+    }));
+  };
+
   const addTeam = () => onChange([...teams, makeTeam(teams.length + 1)]);
   const removeTeam = (ti) => onChange(teams.filter((_, i) => i !== ti));
 
@@ -139,10 +155,11 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
 
   return (
     <div className="page">
-      <p className="section-title-sm">Fourball Teams</p>
+      <p className="section-title-sm">Teams</p>
       <p style={{ fontSize: '0.8rem', color: 'var(--grey-500)', marginTop: -8, marginBottom: 16 }}>
-        Each team is two players. Best score per hole counts for the team — each
-        player must contribute on at least {MIN_CONTRIBUTION_HOLES} holes.
+        2–4 players per team. A team's score is every player's own points added
+        together and divided by the number of players, so teams of different
+        sizes are scored fairly against each other.
       </p>
 
       {errors.general && <p className="form-error mb-12">{errors.general}</p>}
@@ -208,8 +225,27 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
                     {errors[`t${ti}p${pi}hcp`] && <p className="form-error">{errors[`t${ti}p${pi}hcp`]}</p>}
                   </div>
                 </div>
+                {team.players.length > MIN_TEAM_PLAYERS && (
+                  <button
+                    className="remove-player-btn"
+                    onClick={() => removePlayer(ti, pi)}
+                    aria-label="Remove player"
+                  >
+                    <CloseIcon size={18} color="currentColor" />
+                  </button>
+                )}
               </div>
             ))}
+
+            {team.players.length < MAX_TEAM_PLAYERS && (
+              <button
+                className="add-player-btn"
+                onClick={() => addPlayer(ti)}
+                style={{ marginTop: 4 }}
+              >
+                + Add player
+              </button>
+            )}
           </div>
         ))}
       </div>

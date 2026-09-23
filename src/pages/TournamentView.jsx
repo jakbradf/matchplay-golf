@@ -8,10 +8,8 @@ import { adjustTeamsForCourse, getStrokesOnHole } from '../utils/scoring';
 import {
   getGrossPoints,
   getNetPoints,
-  getTeamHolePoints,
   buildLeaderboards,
   getTournamentPlayerHoleGrid,
-  MIN_CONTRIBUTION_HOLES,
 } from '../utils/tournamentScoring';
 import { ChevronLeftIcon, ChevronRightIcon, ShareIcon, TrophyIcon, CloseIcon } from '../components/GolfIcon';
 
@@ -258,14 +256,11 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
     else finishTournament();
   };
 
-  // Completed holes for this team (both players have a gross entry)
+  // Completed holes for this team (every player has a gross entry)
   const completedHoles = course.holes.filter((h) => {
     const hs = scores[String(h.number)]?.[team.id];
-    return hs && hs.player0gross != null && hs.player1gross != null;
+    return hs && team.players.every((_, pi) => hs[`player${pi}gross`] != null);
   });
-
-  const grossResult = getTeamHolePoints(effectiveScores, team.players, hole, 'gross');
-  const netResult = getTeamHolePoints(effectiveScores, team.players, hole, 'net');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -326,12 +321,6 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
         <div className="team-scoring-section">
           <div className="team-scoring-header">
             <span className="team-scoring-name">{team.name}</span>
-            {(grossResult.points != null || netResult.points != null) && (
-              <span className="team-best-net">
-                {grossResult.points != null ? `Gross ${grossResult.points}pt` : ''}
-                {netResult.points != null ? ` · Net ${netResult.points}pt` : ''}
-              </span>
-            )}
           </div>
           {team.players.map((player, pi) => (
             <TournamentScoreInput
@@ -451,28 +440,9 @@ function PlayerScorecard({ scores, team, playerIndex, courseHoles }) {
   );
 }
 
-function ContribRow({ team, contrib }) {
-  return (
-    <div className="contrib-player-row" style={{ padding: '2px 0' }}>
-      {team.players.map((p, pi) => {
-        const count = contrib[pi];
-        const ok = count >= MIN_CONTRIBUTION_HOLES;
-        return (
-          <span
-            key={pi}
-            style={{
-              fontSize: '0.7rem',
-              marginRight: 10,
-              color: ok ? 'var(--green-dark)' : 'var(--red)',
-              fontWeight: 600,
-            }}
-          >
-            {p.name}: {count}h{!ok ? ` (need ${MIN_CONTRIBUTION_HOLES})` : ''}
-          </span>
-        );
-      })}
-    </div>
-  );
+// Team points are an average across players and can come out fractional.
+function fmtPoints(v) {
+  return Number.isInteger(v) ? v : v.toFixed(1);
 }
 
 function LeaderboardView({ tournament, scores, course, onBackToScoring, showBackToScoring }) {
@@ -549,11 +519,10 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
                 </div>
               </div>
               <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
-                {activeBoard === 'teamNet' ? row.netPoints : row.grossPoints}
-                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
+                {fmtPoints(activeBoard === 'teamNet' ? row.netPoints : row.grossPoints)}
+                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> avg pts</span>
               </div>
             </div>
-            <ContribRow team={row} contrib={activeBoard === 'teamNet' ? row.netContrib : row.grossContrib} />
           </div>
         ))}
       </div>
@@ -595,7 +564,7 @@ function ResultsBanner({ tournament, scores, course }) {
               {w.isTeam ? w.row.teamName : w.row.name}
             </span>
             <span className="confirm-value" style={{ color: 'var(--green-dark)', fontWeight: 700 }}>
-              {w.points} pts
+              {fmtPoints(w.points)}{w.isTeam ? ' avg' : ''} pts
             </span>
           </div>
         </div>

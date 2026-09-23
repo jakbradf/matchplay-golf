@@ -10,6 +10,7 @@ import {
   getNetPoints,
   getTeamHolePoints,
   buildLeaderboards,
+  getTournamentPlayerHoleGrid,
   MIN_CONTRIBUTION_HOLES,
 } from '../utils/tournamentScoring';
 import { ChevronLeftIcon, ChevronRightIcon, ShareIcon, TrophyIcon } from '../components/GolfIcon';
@@ -317,6 +318,60 @@ const BOARD_TABS = [
   { key: 'teamNet', label: 'Team', sub: '+ HCP' },
 ];
 
+function scoreCellStyle(diff) {
+  if (diff == null) return { background: 'transparent', color: '#b9c6bd' };
+  if (diff < 0) return { background: '#0a8f4d', color: '#ffffff' };
+  if (diff === 1) return { background: '#10429b', color: '#ffffff' };
+  if (diff > 1) return { background: '#c8332c', color: '#ffffff' };
+  return { background: 'transparent', color: '#0e1a13' };
+}
+
+function TournamentHalfGrid({ half, label }) {
+  return (
+    <div className="gm-lb-half">
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">{label}</div>
+        {half.holeNumbers.map((n) => <div key={n} className="gm-lb-grid-num">{n}</div>)}
+        <div className="gm-lb-grid-total strong">Tot</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">par</div>
+        {half.pars.map((p, i) => <div key={i} className="gm-lb-grid-num">{p}</div>)}
+        <div className="gm-lb-grid-total">{half.totalPar}</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">score</div>
+        {half.cells.map((c, i) => (
+          <div key={i} className={`gm-lb-cell${c.gross == null ? ' empty' : ''}`} style={scoreCellStyle(c.diff)}>
+            {c.gross ?? ''}
+          </div>
+        ))}
+        <div className="gm-lb-grid-total strong">{half.anyScored ? half.totalGross : ''}</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">gross pt</div>
+        {half.cells.map((c, i) => <div key={i} className="gm-lb-grid-num">{c.grossPts ?? ''}</div>)}
+        <div className="gm-lb-grid-total">{half.anyScored ? half.totalGrossPts : ''}</div>
+      </div>
+      <div className="gm-lb-grid-row">
+        <div className="gm-lb-grid-label">net pt</div>
+        {half.cells.map((c, i) => <div key={i} className="gm-lb-grid-num">{c.netPts ?? ''}</div>)}
+        <div className="gm-lb-grid-total">{half.anyScored ? half.totalNetPts : ''}</div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerScorecard({ scores, team, playerIndex, courseHoles }) {
+  const grid = getTournamentPlayerHoleGrid(scores, team, playerIndex, courseHoles);
+  return (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--grey-200)' }}>
+      <TournamentHalfGrid half={grid.out} label="Out" />
+      <TournamentHalfGrid half={grid.in} label="In" />
+    </div>
+  );
+}
+
 function ContribRow({ team, contrib }) {
   return (
     <div className="contrib-player-row" style={{ padding: '2px 0' }}>
@@ -343,6 +398,7 @@ function ContribRow({ team, contrib }) {
 
 function LeaderboardView({ tournament, scores, course, onBackToScoring, showBackToScoring }) {
   const [activeBoard, setActiveBoard] = useState('playerGross');
+  const [openKey, setOpenKey] = useState(null);
   const adjTeams = adjustTeamsForCourse(tournament.teams, course);
   const boards = buildLeaderboards(adjTeams, scores, course.holes);
   const isTeamBoard = activeBoard.startsWith('team');
@@ -371,20 +427,37 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
           </p>
         )}
 
-        {!isTeamBoard && rows.map((row, i) => (
-          <div key={`${row.teamId}-${row.playerIndex}`} className="card mt-8" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--grey-500)', width: 24 }}>{i + 1}</div>
-            <PlayerAvatar name={row.name} photoURL={row.photoURL} size={36} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700 }}>{row.name}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>{row.teamName} · HCP {row.handicap}</div>
+        {!isTeamBoard && rows.map((row, i) => {
+          const key = `${row.teamId}-${row.playerIndex}`;
+          const open = openKey === key;
+          const team = adjTeams.find((t) => t.id === row.teamId);
+          return (
+            <div key={key} className="card mt-8">
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                onClick={() => setOpenKey(open ? null : key)}
+              >
+                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--grey-500)', width: 24 }}>{i + 1}</div>
+                <PlayerAvatar name={row.name} photoURL={row.photoURL} size={36} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700 }}>{row.name}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>{row.teamName} · HCP {row.handicap}</div>
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
+                  {activeBoard === 'playerNet' ? row.netPoints : row.grossPoints}
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
+                </div>
+                <span style={{ display: 'flex', flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none' }}>
+                  <ChevronRightIcon size={16} color="var(--grey-400)" />
+                </span>
+              </div>
+
+              {open && team && (
+                <PlayerScorecard scores={scores} team={team} playerIndex={row.playerIndex} courseHoles={course.holes} />
+              )}
             </div>
-            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
-              {activeBoard === 'playerNet' ? row.netPoints : row.grossPoints}
-              <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isTeamBoard && rows.map((row, i) => (
           <div key={row.teamId} className="card mt-8">

@@ -95,6 +95,49 @@ export function getPlayerTotalPoints(allHoleScores, team, playerIndex, courseHol
   return { total, holesPlayed };
 }
 
+// Grid data for one player's expanded scorecard: two 9-hole halves, each with
+// hole-number / par / gross score (coloured by to-par) / gross points / net points rows.
+export function getTournamentPlayerHoleGrid(allHoleScores, team, playerIndex, courseHoles) {
+  const player = team.players[playerIndex];
+
+  const cellForHole = (hole) => {
+    const teamScores = allHoleScores[String(hole.number)]?.[team.id];
+    const gross = teamScores?.[`player${playerIndex}gross`];
+    if (gross == null) return { gross: null, grossPts: null, netPts: null, diff: null };
+    return {
+      gross,
+      grossPts: getGrossPoints(gross, hole),
+      netPts: getNetPoints(gross, player.handicap, hole),
+      diff: gross - hole.par,
+    };
+  };
+
+  const half = (holes) => ({
+    holeNumbers: holes.map((h) => h.number),
+    pars: holes.map((h) => h.par),
+    cells: holes.map(cellForHole),
+    totalPar: holes.reduce((s, h) => s + h.par, 0),
+    totalGross: holes.reduce((s, h) => {
+      const c = cellForHole(h);
+      return c.gross != null ? s + c.gross : s;
+    }, 0),
+    totalGrossPts: holes.reduce((s, h) => {
+      const c = cellForHole(h);
+      return c.grossPts != null ? s + c.grossPts : s;
+    }, 0),
+    totalNetPts: holes.reduce((s, h) => {
+      const c = cellForHole(h);
+      return c.netPts != null ? s + c.netPts : s;
+    }, 0),
+    anyScored: holes.some((h) => cellForHole(h).gross != null),
+  });
+
+  return {
+    out: half(courseHoles.slice(0, 9)),
+    in: half(courseHoles.slice(9, 18)),
+  };
+}
+
 // Build all four leaderboards. `teams` must already have course-handicap-adjusted
 // player.handicap values (see adjustTeamsForCourse in scoring.js) and each team a stable `id`.
 export function buildLeaderboards(teams, allHoleScores, courseHoles) {

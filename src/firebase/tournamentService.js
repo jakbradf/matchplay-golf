@@ -11,7 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from './config';
-import { generateGameCode } from '../utils/gameCode';
+import { generateGameCode, generatePin } from '../utils/gameCode';
 
 // Create a new tournament document in Firestore
 export async function createTournament({ course, teams, userId = null }) {
@@ -25,18 +25,21 @@ export async function createTournament({ course, teams, userId = null }) {
     exists = snap.exists();
   }
 
+  const endPin = generatePin();
+
   const tournamentData = {
     code,
     status: 'lobby',
     course: { id: course.id, name: course.name },
     teams,
     currentHole: 1,
+    endPin,
     createdBy: userId,
     createdAt: serverTimestamp(),
   };
 
   await setDoc(doc(db, 'tournaments', code), tournamentData);
-  return { code };
+  return { code, endPin };
 }
 
 export async function getTournament(code) {

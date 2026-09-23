@@ -13,7 +13,62 @@ import {
   getTournamentPlayerHoleGrid,
   MIN_CONTRIBUTION_HOLES,
 } from '../utils/tournamentScoring';
-import { ChevronLeftIcon, ChevronRightIcon, ShareIcon, TrophyIcon } from '../components/GolfIcon';
+import { ChevronLeftIcon, ChevronRightIcon, ShareIcon, TrophyIcon, CloseIcon } from '../components/GolfIcon';
+
+// ===== FINISH PIN CONFIRMATION =====
+function FinishPinModal({ correctPin, onConfirm, onClose }) {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
+  const [confirming, setConfirming] = useState(false);
+
+  const submit = async () => {
+    if (pin !== correctPin) {
+      setError('Incorrect PIN');
+      return;
+    }
+    setConfirming(true);
+    try {
+      await onConfirm();
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="picker-overlay" onClick={onClose}>
+      <div className="picker-card" onClick={(e) => e.stopPropagation()}>
+        <div className="picker-header">
+          <span>Finish Tournament</span>
+          <button className="picker-close" onClick={onClose} aria-label="Close">
+            <CloseIcon size={16} color="var(--grey-600)" />
+          </button>
+        </div>
+        <p style={{ fontSize: '0.85rem', color: 'var(--grey-600)', marginBottom: 16 }}>
+          This ends the tournament for everyone. Enter the finish PIN to confirm.
+        </p>
+        <input
+          className={`form-input${error ? ' error' : ''}`}
+          value={pin}
+          onChange={(e) => { setPin(e.target.value.replace(/\D/g, '').slice(0, 4)); setError(''); }}
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          placeholder="PIN"
+          inputMode="numeric"
+          maxLength={4}
+          autoFocus
+          style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.3em' }}
+        />
+        {error && <p className="form-error" style={{ textAlign: 'center' }}>{error}</p>}
+        <button
+          className="btn btn-primary btn-full mt-12"
+          onClick={submit}
+          disabled={pin.length !== 4 || confirming}
+        >
+          {confirming ? 'Finishing…' : 'Finish Tournament'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ===== LOBBY =====
 function LobbyView({ tournament, code, isOrganizer }) {
@@ -79,6 +134,16 @@ function LobbyView({ tournament, code, isOrganizer }) {
               </button>
             </div>
           </div>
+
+          {tournament.endPin && (
+            <div className="card mt-12" style={{ textAlign: 'center' }}>
+              <p className="section-title-sm">Finish PIN</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--grey-600)', marginBottom: 8 }}>
+                You'll need this to end the tournament later.
+              </p>
+              <div className="game-code-value" style={{ fontSize: '1.75rem' }}>{tournament.endPin}</div>
+            </div>
+          )}
         </>
       ) : (
         <div className="card mt-12" style={{ textAlign: 'center' }}>
@@ -145,6 +210,7 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
   const [currentHole, setCurrentHole] = useState(tournament.currentHole || 1);
   const [localScores, setLocalScores] = useState({});
   const [saving, setSaving] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
 
   const hole = course.holes[currentHole - 1];
   const team = adjTeams.find(t => t.id === selectedTeamId) ?? adjTeams[0];
@@ -185,6 +251,11 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
   const finishTournament = async () => {
     await saveCurrentHole();
     await updateTournament(code, { status: 'complete' });
+  };
+
+  const requestFinish = () => {
+    if (tournament.endPin) setShowFinishModal(true);
+    else finishTournament();
   };
 
   // Completed holes for this team (both players have a gross entry)
@@ -278,7 +349,7 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
         </button>
 
         {currentHole === 18 && isOrganizer && (
-          <button className="btn btn-secondary btn-full" onClick={finishTournament} disabled={saving}>
+          <button className="btn btn-secondary btn-full" onClick={requestFinish} disabled={saving}>
             Finish Tournament
           </button>
         )}
@@ -296,7 +367,7 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
         </button>
         <span style={{ fontSize: '0.875rem', color: 'var(--grey-600)', fontWeight: 600 }}>{currentHole} / 18</span>
         {currentHole === 18 ? (
-          <button className="btn btn-primary btn-sm" onClick={finishTournament} disabled={saving || !isOrganizer} style={{ minWidth: 100 }}>
+          <button className="btn btn-primary btn-sm" onClick={requestFinish} disabled={saving || !isOrganizer} style={{ minWidth: 100 }}>
             Finish
           </button>
         ) : (
@@ -306,6 +377,14 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
           </button>
         )}
       </div>
+
+      {showFinishModal && (
+        <FinishPinModal
+          correctPin={tournament.endPin}
+          onConfirm={async () => { await finishTournament(); setShowFinishModal(false); }}
+          onClose={() => setShowFinishModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -321,7 +321,7 @@ function TeamShareRow({ tournamentCode, team }) {
   );
 }
 
-function StepShare({ tournamentCode, teams, onStart }) {
+function StepShare({ tournamentCode, teams, endPin, onStart }) {
   const [copied, setCopied] = useState(false);
   const organizerUrl = `${window.location.origin}/tournament/${tournamentCode}`;
 
@@ -354,6 +354,17 @@ function StepShare({ tournamentCode, teams, onStart }) {
         </div>
       </div>
 
+      {endPin && (
+        <div className="card mt-12" style={{ textAlign: 'center' }}>
+          <p className="section-title-sm">Finish PIN</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--grey-500)', marginBottom: 8 }}>
+            You'll need this to end the tournament — it protects against finishing by mistake.
+            Write it down; it won't be shown again.
+          </p>
+          <div className="game-code-value" style={{ fontSize: '2rem' }}>{endPin}</div>
+        </div>
+      )}
+
       <p className="section-title-sm" style={{ marginTop: 20 }}>Send Each Team Their Own Link</p>
       {teams.map((team) => (
         <TeamShareRow key={team.id} tournamentCode={tournamentCode} team={team} />
@@ -381,6 +392,7 @@ export default function CreateTournament() {
   const [teams, setTeams] = useState([makeTeam(1), makeTeam(2)]);
   const [createdTeams, setCreatedTeams] = useState([]);
   const [tournamentCode, setTournamentCode] = useState(null);
+  const [endPin, setEndPin] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -398,13 +410,14 @@ export default function CreateTournament() {
           ...(p.photoURL ? { photoURL: p.photoURL } : {}),
         })),
       }));
-      const { code } = await createTournament({
+      const { code, endPin: pin } = await createTournament({
         course,
         teams: normalizedTeams,
         userId: user?.uid ?? null,
       });
       setCreatedTeams(normalizedTeams);
       setTournamentCode(code);
+      setEndPin(pin);
       setStep(4);
     } catch (err) {
       setError('Failed to create tournament. Check your Firebase config.');
@@ -443,7 +456,7 @@ export default function CreateTournament() {
         <StepConfirm course={course} teams={teams} onConfirm={handleConfirm} onBack={() => setStep(2)} loading={loading} />
       )}
       {step === 4 && (
-        <StepShare tournamentCode={tournamentCode} teams={createdTeams} onStart={(code) => navigate(`/tournament/${code}`)} />
+        <StepShare tournamentCode={tournamentCode} teams={createdTeams} endPin={endPin} onStart={(code) => navigate(`/tournament/${code}`)} />
       )}
     </div>
   );

@@ -445,16 +445,27 @@ function fmtPoints(v) {
   return Number.isInteger(v) ? v : v.toFixed(1);
 }
 
-function LeaderboardView({ tournament, scores, course, onBackToScoring, showBackToScoring }) {
+// Non-organizer viewers only see standings through this hole, so the final
+// score stays a surprise until the organizer reveals it after the event.
+const LEADERBOARD_HOLE_CAP = 15;
+
+function LeaderboardView({ tournament, scores, course, onBackToScoring, showBackToScoring, isOrganizer }) {
   const [activeBoard, setActiveBoard] = useState('playerGross');
   const [openKey, setOpenKey] = useState(null);
+  const visibleHoles = isOrganizer ? course.holes : course.holes.slice(0, LEADERBOARD_HOLE_CAP);
   const adjTeams = adjustTeamsForCourse(tournament.teams, course);
-  const boards = buildLeaderboards(adjTeams, scores, course.holes);
+  const boards = buildLeaderboards(adjTeams, scores, visibleHoles);
   const isTeamBoard = activeBoard.startsWith('team');
   const rows = boards[activeBoard];
 
   return (
     <div style={{ padding: '0 16px 24px', flex: 1, overflowY: 'auto' }}>
+      {!isOrganizer && (
+        <p style={{ fontSize: '0.78rem', color: 'var(--grey-500)', textAlign: 'center', margin: '12px 0 0' }}>
+          Standings shown through hole {LEADERBOARD_HOLE_CAP} — the final holes are revealed after the event.
+        </p>
+      )}
+
       <div className="tabs" style={{ margin: '12px 0 0' }}>
         {BOARD_TABS.map((b) => (
           <button
@@ -502,7 +513,7 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
               </div>
 
               {open && team && (
-                <PlayerScorecard scores={scores} team={team} playerIndex={row.playerIndex} courseHoles={course.holes} />
+                <PlayerScorecard scores={scores} team={team} playerIndex={row.playerIndex} courseHoles={visibleHoles} />
               )}
             </div>
           );
@@ -515,7 +526,7 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700 }}>{row.teamName}</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>
-                  {row.players.map(p => p.name).join(' & ')} · {row.holesCounted}/18 holes
+                  {row.players.map(p => p.name).join(' & ')} · {row.holesCounted}/{visibleHoles.length} holes
                 </div>
               </div>
               <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
@@ -691,6 +702,7 @@ export default function TournamentView() {
               scores={scores}
               course={course}
               showBackToScoring={false}
+              isOrganizer={isOrganizer}
             />
           )}
         </>
@@ -699,7 +711,7 @@ export default function TournamentView() {
       {tournament.status === 'complete' && course && (
         <>
           <ResultsBanner tournament={tournament} scores={scores} course={course} />
-          <LeaderboardView tournament={tournament} scores={scores} course={course} showBackToScoring={false} />
+          <LeaderboardView tournament={tournament} scores={scores} course={course} showBackToScoring={false} isOrganizer={true} />
         </>
       )}
     </div>

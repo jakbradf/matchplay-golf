@@ -2666,6 +2666,21 @@ body {
   justify-content: center;
 }
 
+.pick-player-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: 600 0.78rem/1 'Inter', sans-serif;
+  color: var(--green-dark);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.pick-player-btn:active {
+  color: var(--green-mid);
+}
+
 /* ===== MY PLAYERS (stored roster) ===== */
 .stored-player-row {
   display: flex;

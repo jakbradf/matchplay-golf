@@ -202,7 +202,16 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
                 </button>
                 <div className="player-row-inner">
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Player {pi + 1} Name</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>Player {pi + 1} Name</label>
+                      <button
+                        type="button"
+                        className="pick-player-btn"
+                        onClick={() => setPickerFor({ ti, pi })}
+                      >
+                        Pick Player
+                      </button>
+                    </div>
                     <input
                       className={`form-input form-input-sm${errors[`t${ti}p${pi}name`] ? ' error' : ''}`}
                       value={player.name}

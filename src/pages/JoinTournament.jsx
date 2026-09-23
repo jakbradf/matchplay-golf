@@ -35,7 +35,7 @@ export default function JoinTournament() {
     }
   };
 
-  const handleJoin = () => navigate(`/tournament/${code.trim().toUpperCase()}`);
+  const handleJoin = (team) => navigate(`/tournament/${code.trim().toUpperCase()}/team/${team.id}/${team.editToken}`);
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !tournament) handleLookup(); };
 
   return (
@@ -76,24 +76,29 @@ export default function JoinTournament() {
                 <span className="confirm-value">{tournament.course.name}</span>
               </div>
               <div className="confirm-row">
-                <span className="confirm-label">Teams</span>
-                <span className="confirm-value">{tournament.teams.length}</span>
-              </div>
-              <div className="confirm-row">
                 <span className="confirm-label">Status</span>
                 <span className="confirm-value" style={{ textTransform: 'capitalize' }}>{tournament.status}</span>
               </div>
             </div>
 
-            <div style={{ marginTop: 24 }}>
+            <p className="section-title-sm mt-16">Which team are you on?</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--grey-500)', marginTop: -8, marginBottom: 12 }}>
+              This locks your scoring to that team and hides the final result until the organizer reveals it.
+            </p>
+            {tournament.teams.map((team) => (
               <button
-                className="btn btn-primary btn-full"
-                style={{ minHeight: 60, fontSize: '1.1rem' }}
-                onClick={handleJoin}
+                key={team.id}
+                className="my-game-card"
+                onClick={() => handleJoin(team)}
               >
-                Enter Tournament
+                <div className="my-game-top">
+                  <span className="my-game-course">{team.name}</span>
+                </div>
+                <div className="my-game-teams">
+                  {team.players.map(p => p.name).join(' & ')}
+                </div>
               </button>
-            </div>
+            ))}
           </>
         )}
       </div>

@@ -501,7 +501,9 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
                 <PlayerAvatar name={row.name} photoURL={row.photoURL} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700 }}>{row.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>{row.teamName} · HCP {row.handicap}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>
+                    {row.teamName} · HCP {row.handicap} · thru {row.holesPlayed}
+                  </div>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
                   {activeBoard === 'playerNet' ? row.netPoints : row.grossPoints}

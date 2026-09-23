@@ -90,6 +90,7 @@ export default function MyPlayers() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState('');
 
   const [newName, setNewName] = useState('');
   const [newHandicap, setNewHandicap] = useState('');
@@ -99,7 +100,13 @@ export default function MyPlayers() {
   const refresh = () => {
     if (!user) return;
     setLoading(true);
-    loadStoredPlayers(user.uid).then(setPlayers).finally(() => setLoading(false));
+    loadStoredPlayers(user.uid)
+      .then(setPlayers)
+      .catch((err) => {
+        console.error(err);
+        setError('Could not load your saved players.');
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(refresh, [user]);
@@ -107,6 +114,7 @@ export default function MyPlayers() {
   const addPlayer = async () => {
     if (!newName.trim()) return;
     setAdding(true);
+    setError('');
     try {
       await saveStoredPlayer({ name: newName.trim(), handicap: newHandicap, photoURL: newPhoto }, user.uid);
       setNewName('');
@@ -115,20 +123,33 @@ export default function MyPlayers() {
       refresh();
     } catch (err) {
       console.error(err);
+      setError(`Could not save player: ${err?.message || 'unknown error'}`);
     } finally {
       setAdding(false);
     }
   };
 
   const saveEdit = async (id, updates) => {
-    await updateStoredPlayer(id, updates);
-    setEditingId(null);
-    refresh();
+    setError('');
+    try {
+      await updateStoredPlayer(id, updates);
+      setEditingId(null);
+      refresh();
+    } catch (err) {
+      console.error(err);
+      setError(`Could not save changes: ${err?.message || 'unknown error'}`);
+    }
   };
 
   const removePlayer = async (id) => {
-    await deleteStoredPlayer(id);
-    refresh();
+    setError('');
+    try {
+      await deleteStoredPlayer(id);
+      refresh();
+    } catch (err) {
+      console.error(err);
+      setError(`Could not delete player: ${err?.message || 'unknown error'}`);
+    }
   };
 
   if (authLoading) {
@@ -162,6 +183,7 @@ export default function MyPlayers() {
       <Header title="My Players" showBack backTo="/" />
       <div className="page">
         <p className="section-title-sm">Add Player</p>
+        {error && <p className="form-error mb-12">{error}</p>}
         <div className="card" style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <PhotoField name={newName} photoURL={newPhoto} onChange={setNewPhoto} />
           <div className="picker-new-fields">

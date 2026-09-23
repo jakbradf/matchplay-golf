@@ -19,12 +19,21 @@ export default function StoredPlayerPicker({ currentName, currentHandicap, onSel
   const [photoURL, setPhotoURL] = useState(null);
   const [saveToRoster, setSaveToRoster] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    loadStoredPlayers(user.uid).then(setRoster).finally(() => setLoading(false));
+    setLoadError('');
+    loadStoredPlayers(user.uid)
+      .then(setRoster)
+      .catch((err) => {
+        console.error(err);
+        setLoadError('Could not load your saved players.');
+      })
+      .finally(() => setLoading(false));
   }, [user]);
 
   const filtered = search.trim()
@@ -48,15 +57,24 @@ export default function StoredPlayerPicker({ currentName, currentHandicap, onSel
 
   const useNewPlayer = async () => {
     if (!name.trim()) return;
+    const player = { name: name.trim(), handicap, photoURL };
+    // Always apply the player to the game/tournament first — a roster-save
+    // failure (e.g. a Firestore permissions issue) should never block that.
+    onSelect(player);
+
+    if (!saveToRoster || !user) {
+      onClose();
+      return;
+    }
+
     setSaving(true);
+    setSaveError('');
     try {
-      if (saveToRoster && user) {
-        await saveStoredPlayer({ name: name.trim(), handicap, photoURL }, user.uid);
-      }
-      onSelect({ name: name.trim(), handicap, photoURL });
+      await saveStoredPlayer(player, user.uid);
       onClose();
     } catch (err) {
       console.error(err);
+      setSaveError(`Player was used, but saving to My Players failed: ${err?.message || 'unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -89,7 +107,9 @@ export default function StoredPlayerPicker({ currentName, currentHandicap, onSel
 
         {user && loading && <p className="picker-empty">Loading…</p>}
 
-        {user && !loading && (
+        {user && loadError && <p className="form-error">{loadError}</p>}
+
+        {user && !loading && !loadError && (
           <div className="picker-list">
             {filtered.map((p) => (
               <button key={p.id} className="picker-row" onClick={() => selectStored(p)}>
@@ -155,13 +175,15 @@ export default function StoredPlayerPicker({ currentName, currentHandicap, onSel
           </label>
         )}
 
+        {saveError && <p className="form-error">{saveError}</p>}
+
         <button
           className="btn btn-primary btn-full"
           style={{ marginTop: 12 }}
           disabled={!name.trim() || saving}
           onClick={useNewPlayer}
         >
-          {saving ? 'Saving…' : 'Use This Player'}
+          {saving ? 'Saving…' : saveError ? 'Retry Save' : 'Use This Player'}
         </button>
       </div>
     </div>

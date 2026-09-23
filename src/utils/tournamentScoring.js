@@ -105,7 +105,7 @@ export function getTournamentPlayerHoleGrid(allHoleScores, team, playerIndex, co
   };
 }
 
-// Build all four leaderboards. `teams` must already have course-handicap-adjusted
+// Build the leaderboards. `teams` must already have course-handicap-adjusted
 // player.handicap values (see adjustTeamsForCourse in scoring.js) and each team a stable `id`.
 export function buildLeaderboards(teams, allHoleScores, courseHoles) {
   const playerRows = [];
@@ -128,22 +128,19 @@ export function buildLeaderboards(teams, allHoleScores, courseHoles) {
   });
 
   const teamRows = teams.map((team) => {
-    const gross = getTeamTotalPoints(allHoleScores, team, courseHoles, 'gross');
     const net = getTeamTotalPoints(allHoleScores, team, courseHoles, 'net');
     return {
       teamId: team.id,
       teamName: team.name,
       players: team.players,
-      grossPoints: gross.total,
       netPoints: net.total,
-      holesCounted: gross.holesCounted,
+      holesCounted: net.holesCounted,
     };
   });
 
   return {
     playerGross: [...playerRows].sort((a, b) => b.grossPoints - a.grossPoints),
     playerNet: [...playerRows].sort((a, b) => b.netPoints - a.netPoints),
-    teamGross: [...teamRows].sort((a, b) => b.grossPoints - a.grossPoints),
     teamNet: [...teamRows].sort((a, b) => b.netPoints - a.netPoints),
   };
 }

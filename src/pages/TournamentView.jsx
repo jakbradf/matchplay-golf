@@ -380,10 +380,9 @@ function HoleScoringView({ tournament, scores, course, code, lockedTeamId, isOrg
 
 // ===== LEADERBOARD =====
 const BOARD_TABS = [
-  { key: 'playerGross', label: 'Player', sub: 'Gross' },
   { key: 'playerNet', label: 'Player', sub: '+ HCP' },
-  { key: 'teamGross', label: 'Team', sub: 'Gross' },
   { key: 'teamNet', label: 'Team', sub: '+ HCP' },
+  { key: 'playerGross', label: 'TIGER', sub: 'Gross' },
 ];
 
 function scoreCellStyle(diff) {
@@ -450,7 +449,7 @@ function fmtPoints(v) {
 const LEADERBOARD_HOLE_CAP = 15;
 
 function LeaderboardView({ tournament, scores, course, onBackToScoring, showBackToScoring, isOrganizer }) {
-  const [activeBoard, setActiveBoard] = useState('playerGross');
+  const [activeBoard, setActiveBoard] = useState('playerNet');
   const [openKey, setOpenKey] = useState(null);
   const visibleHoles = isOrganizer ? course.holes : course.holes.slice(0, LEADERBOARD_HOLE_CAP);
   const adjTeams = adjustTeamsForCourse(tournament.teams, course);
@@ -505,10 +504,20 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
                     {row.teamName} · HCP {row.handicap} · thru {row.holesPlayed}
                   </div>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
-                  {activeBoard === 'playerNet' ? row.netPoints : row.grossPoints}
-                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
-                </div>
+                {activeBoard === 'playerNet' ? (
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
+                      {row.netPoints}
+                      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> net</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--grey-500)' }}>{row.grossPoints} gross</div>
+                  </div>
+                ) : (
+                  <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
+                    {row.grossPoints}
+                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> pts</span>
+                  </div>
+                )}
                 <span style={{ display: 'flex', flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none' }}>
                   <ChevronRightIcon size={16} color="var(--grey-400)" />
                 </span>
@@ -532,7 +541,7 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
                 </div>
               </div>
               <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--green-dark)' }}>
-                {fmtPoints(activeBoard === 'teamNet' ? row.netPoints : row.grossPoints)}
+                {fmtPoints(row.netPoints)}
                 <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--grey-500)' }}> avg pts</span>
               </div>
             </div>
@@ -555,10 +564,9 @@ function ResultsBanner({ tournament, scores, course }) {
   const boards = buildLeaderboards(adjTeams, scores, course.holes);
 
   const winners = [
-    { label: 'Best Player (Gross)', row: boards.playerGross[0], points: boards.playerGross[0]?.grossPoints },
     { label: 'Best Player (+ HCP)', row: boards.playerNet[0], points: boards.playerNet[0]?.netPoints },
-    { label: 'Best Team (Gross)', row: boards.teamGross[0], points: boards.teamGross[0]?.grossPoints, isTeam: true },
     { label: 'Best Team (+ HCP)', row: boards.teamNet[0], points: boards.teamNet[0]?.netPoints, isTeam: true },
+    { label: 'TIGER (Gross)', row: boards.playerGross[0], points: boards.playerGross[0]?.grossPoints },
   ];
 
   return (

@@ -4,6 +4,7 @@ export function generateGameCode() {
 }
 
 // A 4-digit PIN required to end a tournament — guards against an accidental tap.
+// Fixed to '1337' for now instead of randomizing per tournament.
 export function generatePin() {
-  return String(Math.floor(1000 + Math.random() * 9000));
+  return '1337';
 }

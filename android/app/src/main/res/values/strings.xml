@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Matchplay Golf</string>
+    <string name="title_activity_main">Matchplay Golf</string>
+    <string name="package_name">no.bradford.matchplay</string>
+    <string name="custom_url_scheme">no.bradford.matchplay</string>
+</resources>

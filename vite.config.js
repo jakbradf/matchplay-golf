@@ -2,6 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Native app shells (Capacitor) don't need a service worker or web manifest —
+// that plugin is only for the browser-hosted PWA build.
+const isCapacitorBuild = process.env.CAPACITOR === 'true';
+
 export default defineConfig({
   base: '/',
   build: {
@@ -17,7 +21,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
+    !isCapacitorBuild && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {

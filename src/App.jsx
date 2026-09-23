@@ -7,6 +7,7 @@ import GameView from './pages/GameView';
 import Results from './pages/Results';
 import WatchGame from './pages/WatchGame';
 import MyGames from './pages/MyGames';
+import MyTournaments from './pages/MyTournaments';
 import MyPlayers from './pages/MyPlayers';
 import CreateCourse from './pages/CreateCourse';
 import CreateTournament from './pages/CreateTournament';
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/game/:code/results" element={<Results />} />
           <Route path="/game/:code/watch" element={<WatchGame />} />
           <Route path="/my-games" element={<MyGames />} />
+          <Route path="/my-tournaments" element={<MyTournaments />} />
           <Route path="/my-players" element={<MyPlayers />} />
           <Route path="/create-course" element={<CreateCourse />} />
           <Route path="/create-tournament" element={<CreateTournament />} />

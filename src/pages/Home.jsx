@@ -5,6 +5,7 @@ import { GolfMatchLogo } from '../components/GolfMatchLogo';
 import UserMenu from '../components/UserMenu';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserGames } from '../firebase/gameService';
+import { getUserTournaments } from '../firebase/tournamentService';
 
 function GameStatusBadge({ status }) {
   const map = { lobby: 'Lobby', active: 'Live', complete: 'Complete' };
@@ -20,6 +21,8 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const [recentGames, setRecentGames] = useState([]);
   const [gamesLoading, setGamesLoading] = useState(false);
+  const [recentTournaments, setRecentTournaments] = useState([]);
+  const [tournamentsLoading, setTournamentsLoading] = useState(false);
 
   useEffect(() => {
     if (!user) { setRecentGames([]); return; }
@@ -27,6 +30,14 @@ export default function Home() {
     getUserGames(user.uid)
       .then(games => setRecentGames(games.slice(0, 5)))
       .finally(() => setGamesLoading(false));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) { setRecentTournaments([]); return; }
+    setTournamentsLoading(true);
+    getUserTournaments(user.uid)
+      .then(tournaments => setRecentTournaments(tournaments.slice(0, 5)))
+      .finally(() => setTournamentsLoading(false));
   }, [user]);
 
   return (
@@ -116,6 +127,45 @@ export default function Home() {
                   <GameStatusBadge status={game.status} />
                   <span className="recent-game-teams">
                     {game.teams?.map(t => t.name).join(' vs ')}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Recent tournaments for logged-in users */}
+        {user && (
+          <div className="home-recent">
+            <div className="home-recent-header">
+              <h3>Recent Tournaments</h3>
+              <button className="home-recent-all" onClick={() => navigate('/my-tournaments')}>
+                <TrophyIcon size={14} color="var(--green-dark)" />
+                All tournaments
+              </button>
+            </div>
+
+            {tournamentsLoading && (
+              <p style={{ color: 'var(--grey-500)', fontSize: '0.875rem' }}>Loading…</p>
+            )}
+
+            {!tournamentsLoading && recentTournaments.length === 0 && (
+              <p style={{ color: 'var(--grey-500)', fontSize: '0.875rem' }}>
+                No tournaments yet. Host your first one!
+              </p>
+            )}
+
+            {recentTournaments.map(t => (
+              <button
+                key={t.code}
+                className="recent-game-card"
+                onClick={() => navigate(`/tournament/${t.code}`)}
+              >
+                <div className="recent-game-course">{t.course?.name}</div>
+                <div className="recent-game-meta">
+                  <GameStatusBadge status={t.status} />
+                  <span className="recent-game-teams">
+                    {t.teams?.map(team => team.name).join(' vs ')}
                   </span>
                 </div>
               </button>

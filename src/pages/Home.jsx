@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GolfFlagIcon, HistoryIcon, TrophyIcon } from '../components/GolfIcon';
+import { GolfFlagIcon, HistoryIcon, TrophyIcon, UsersIcon } from '../components/GolfIcon';
 import { GolfMatchLogo } from '../components/GolfMatchLogo';
 import UserMenu from '../components/UserMenu';
 import { useAuth } from '../contexts/AuthContext';
@@ -88,6 +88,16 @@ export default function Home() {
             onClick={() => navigate('/join-tournament')}
           >
             Join Tournament
+          </button>
+        </div>
+
+        <div className="home-actions" style={{ marginTop: 8 }}>
+          <button
+            className="btn btn-secondary btn-full"
+            onClick={() => navigate('/my-players')}
+          >
+            <UsersIcon size={18} color="var(--green-dark)" />
+            My Players
           </button>
         </div>
 

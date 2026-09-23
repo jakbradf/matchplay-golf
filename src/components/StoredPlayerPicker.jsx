@@ -90,41 +90,48 @@ export default function StoredPlayerPicker({ currentName, currentHandicap, onSel
           </button>
         </div>
 
-        {user && roster.length > 0 && (
-          <div className="picker-search">
-            <SearchIcon size={15} color="var(--grey-500)" />
-            <input
-              placeholder="Search saved players…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        )}
-
         {!user && (
           <p className="picker-empty">Sign in to save and reuse players across games.</p>
         )}
 
-        {user && loading && <p className="picker-empty">Loading…</p>}
+        {user && (
+          <>
+            <p className="section-title-sm" style={{ marginTop: 4 }}>Saved Players</p>
 
-        {user && loadError && <p className="form-error">{loadError}</p>}
+            {roster.length > 0 && (
+              <div className="picker-search">
+                <SearchIcon size={15} color="var(--grey-500)" />
+                <input
+                  placeholder="Search saved players…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            )}
 
-        {user && !loading && !loadError && (
-          <div className="picker-list">
-            {filtered.map((p) => (
-              <button key={p.id} className="picker-row" onClick={() => selectStored(p)}>
-                <PlayerAvatar name={p.name} photoURL={p.photoURL} size={36} />
-                <div className="picker-row-info">
-                  <span className="picker-row-name">{p.name}</span>
-                  <span className="picker-row-hcp">HCP {p.handicap}</span>
-                </div>
-              </button>
-            ))}
-            {roster.length === 0 && <p className="picker-empty">No saved players yet.</p>}
-          </div>
+            {loading && <p className="picker-empty">Loading…</p>}
+            {loadError && <p className="form-error">{loadError}</p>}
+
+            {!loading && !loadError && (
+              <div className="picker-list">
+                {filtered.map((p) => (
+                  <button key={p.id} className="picker-row" onClick={() => selectStored(p)}>
+                    <PlayerAvatar name={p.name} photoURL={p.photoURL} size={36} />
+                    <div className="picker-row-info">
+                      <span className="picker-row-name">{p.name}</span>
+                      <span className="picker-row-hcp">HCP {p.handicap}</span>
+                    </div>
+                  </button>
+                ))}
+                {roster.length === 0 && (
+                  <p className="picker-empty">No saved players yet — add one below and it'll show up here next time.</p>
+                )}
+              </div>
+            )}
+          </>
         )}
 
-        <div className="picker-divider">or add new</div>
+        <p className="section-title-sm mt-16">Add New Player</p>
 
         <div className="picker-new-form">
           <button

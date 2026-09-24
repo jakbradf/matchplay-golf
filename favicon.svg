@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#1a5c38"/>
-  <circle cx="16" cy="15" r="8" fill="white"/>
-  <circle cx="13.5" cy="12.5" r="0.9" fill="rgba(0,0,0,0.18)"/>
-  <circle cx="17.5" cy="11" r="0.9" fill="rgba(0,0,0,0.18)"/>
-  <circle cx="19.5" cy="15" r="0.9" fill="rgba(0,0,0,0.18)"/>
-  <circle cx="15.5" cy="18.5" r="0.9" fill="rgba(0,0,0,0.18)"/>
-  <circle cx="12" cy="16.5" r="0.9" fill="rgba(0,0,0,0.18)"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12.266388888888887 17.888888888888886 72.22222222222223 72.22222222222223" width="512" height="512"><rect x="12.266388888888887" y="17.888888888888886" width="72.22222222222223" height="72.22222222222223" rx="10.111111111111112" fill="#ffffff"></rect><rect x="23.55" y="54" width="9.5" height="26" rx="3.1666666666666665" fill="#0e1a13"></rect><rect x="38.55" y="42.44444444444444" width="9.5" height="37.55555555555556" rx="3.1666666666666665" fill="#0e1a13"></rect><rect x="53.55" y="28" width="5.9" height="52" rx="2.95" fill="#00a651"></rect><path d="M56.205 28 L73.205 33.94 L56.205 39.88 Z" fill="#00a651"></path></svg>

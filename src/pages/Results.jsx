@@ -88,6 +88,34 @@ export default function Results() {
         <p className="section-title">Scorecard (thru {visibleHoles.length})</p>
         <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
 
+        <div className="game-code-display mt-16">
+          <div className="game-code-label">Game Code</div>
+          <div className="game-code-value">{code}</div>
+          <div className="game-code-hint">{game.course.name}</div>
+        </div>
+
+        <div className="card mt-8" style={{ textAlign: 'center' }}>
+          <p className="section-title-sm">Reveal Presentation</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--grey-600)', marginBottom: 8 }}>
+            Step through the standings thru 15, 16, 17 holes and the final reveal.
+          </p>
+          <div className="share-link">
+            <span className="share-link-text">{`${window.location.origin}/game/${code}/reveal`}</span>
+            <button
+              className="share-link-copy"
+              onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/game/${code}/reveal`)}
+            >
+              Copy
+            </button>
+          </div>
+          <button
+            className="btn btn-primary btn-full mt-8"
+            onClick={() => navigate(`/game/${code}/reveal`)}
+          >
+            Open Reveal Presentation
+          </button>
+        </div>
+
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button
             className="btn btn-secondary"

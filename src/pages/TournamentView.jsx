@@ -547,9 +547,11 @@ function LeaderboardView({ tournament, scores, course, onBackToScoring, showBack
 }
 
 // ===== FINAL RESULTS BANNER =====
-function ResultsBanner({ tournament, scores, course }) {
+function ResultsBanner({ tournament, scores, course, code }) {
+  const navigate = useNavigate();
   const adjTeams = adjustTeamsForCourse(tournament.teams, course);
   const boards = buildLeaderboards(adjTeams, scores, course.holes);
+  const revealUrl = `${window.location.origin}/tournament/${code}/reveal`;
 
   const winners = [
     { label: 'Best Player (+ HCP)', row: boards.playerNet[0], points: boards.playerNet[0]?.netPoints },
@@ -578,6 +580,31 @@ function ResultsBanner({ tournament, scores, course }) {
           </div>
         </div>
       ))}
+
+      <div className="game-code-display mt-12">
+        <div className="game-code-label">Tournament Code</div>
+        <div className="game-code-value">{code}</div>
+        <div className="game-code-hint">{tournament.course.name}</div>
+      </div>
+
+      <div className="card mt-12" style={{ textAlign: 'center' }}>
+        <p className="section-title-sm">Reveal Presentation</p>
+        <p style={{ fontSize: '0.875rem', color: 'var(--grey-600)', marginBottom: 8 }}>
+          Step through the standings thru 15, 16, 17 holes and the final reveal.
+        </p>
+        <div className="share-link">
+          <span className="share-link-text">{revealUrl}</span>
+          <button className="share-link-copy" onClick={() => navigator.clipboard?.writeText(revealUrl)}>
+            Copy
+          </button>
+        </div>
+        <button
+          className="btn btn-primary btn-full mt-8"
+          onClick={() => navigate(`/tournament/${code}/reveal`)}
+        >
+          Open Reveal Presentation
+        </button>
+      </div>
     </div>
   );
 }
@@ -708,7 +735,7 @@ export default function TournamentView() {
 
       {tournament.status === 'complete' && course && (
         <>
-          <ResultsBanner tournament={tournament} scores={scores} course={course} />
+          <ResultsBanner tournament={tournament} scores={scores} course={course} code={code} />
           <LeaderboardView tournament={tournament} scores={scores} course={course} showBackToScoring={false} isOrganizer={true} />
         </>
       )}

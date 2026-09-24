@@ -52,6 +52,16 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Bake activation directly into the generated sw.js instead of only
+        // reacting to a postMessage — registerType: 'autoUpdate' alone does
+        // NOT make the worker skip waiting on its own (its message listener
+        // only fires skipWaiting() when told to), so a worker that finished
+        // installing while a tab was already open could sit in 'waiting'
+        // indefinitely. main.jsx also nudges any such worker directly, as a
+        // migration path for clients still running an older bundle that
+        // predates this.
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {

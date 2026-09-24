@@ -18,24 +18,51 @@ createRoot(document.getElementById('root')).render(
 
 // Register the service worker ourselves so updates actually reach open tabs
 // and installed home-screen icons (web build only — native app shells update
-// through the app store instead). registerType: 'autoUpdate' makes the
-// generated service worker skip waiting and claim clients as soon as a new
-// version activates; this reload-once-on-takeover is what makes that
-// visible instead of leaving the old JS running until the user thinks to
-// force-refresh.
+// through the app store instead).
+//
+// registerType: 'autoUpdate' does NOT make the generated service worker
+// skip waiting on its own — the sw.js it produces only calls skipWaiting()
+// when it receives a {type:'SKIP_WAITING'} postMessage. vite-plugin-pwa's
+// own registerSW() only sends that message in reaction to an 'installed'/
+// 'waiting' event fired *during this page load*; a worker that was already
+// sitting in the waiting state from an earlier visit (e.g. a tab that's
+// been open across several deploys) is never nudged, so it can stay stuck
+// there indefinitely while everyone keeps running the old cached JS. We
+// message any pre-existing waiting worker ourselves on load, and do the
+// same for every future install, as a belt-and-suspenders on top of
+// registerSW()'s own handling.
 if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
-  import('virtual:pwa-register').then(({ registerSW }) => {
-    let reloading = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloading) return;
-      reloading = true;
-      window.location.reload();
-    });
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
 
+  const skipWaitingIfAny = (registration) => {
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  };
+
+  navigator.serviceWorker.getRegistration().then((registration) => {
+    if (!registration) return;
+    skipWaitingIfAny(registration);
+    registration.addEventListener('updatefound', () => {
+      const installing = registration.installing;
+      if (!installing) return;
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed') skipWaitingIfAny(registration);
+      });
+    });
+  }).catch(() => {});
+
+  import('virtual:pwa-register').then(({ registerSW }) => {
     registerSW({
       immediate: true,
       onRegisteredSW(_url, registration) {
         if (!registration) return;
+        skipWaitingIfAny(registration);
         // Also poll for updates while the app stays open in the background.
         setInterval(() => registration.update(), 30 * 60 * 1000);
       },

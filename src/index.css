@@ -2919,6 +2919,117 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* ===== TOURNAMENT REVEAL (multi-category leaderboard) ===== */
+.reveal-body-wide {
+  width: 100%;
+  max-width: 420px;
+}
+
+.reveal-body-wide .reveal-kicker { margin-bottom: 6px; }
+.reveal-body-wide .reveal-thru { margin-bottom: 14px; }
+.reveal-body-wide .reveal-winner-label { margin-top: 10px; }
+
+.reveal-board-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  padding: 4px;
+}
+
+.reveal-board-tab {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reveal-board-tab.active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.reveal-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.reveal-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9375rem;
+  padding: 12px 0;
+}
+
+.reveal-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.reveal-rank-row.leader {
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+}
+
+.reveal-rank-num {
+  width: 20px;
+  flex-shrink: 0;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.reveal-rank-row.leader .reveal-rank-num {
+  color: var(--gold);
+}
+
+.reveal-rank-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.reveal-rank-name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reveal-rank-sub {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reveal-rank-pts {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: 1.0625rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.reveal-rank-row.leader .reveal-rank-pts {
+  color: var(--gold);
+}
+
 /* ===== HIDDEN HOLES NOTICE ===== */
 .hidden-holes-notice {
   background: var(--gold-light);

@@ -14,6 +14,7 @@ import CreateCourse from './pages/CreateCourse';
 import CreateTournament from './pages/CreateTournament';
 import JoinTournament from './pages/JoinTournament';
 import TournamentView from './pages/TournamentView';
+import TournamentReveal from './pages/TournamentReveal';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/create-tournament" element={<CreateTournament />} />
           <Route path="/join-tournament" element={<JoinTournament />} />
           <Route path="/tournament/:code" element={<TournamentView />} />
+          <Route path="/tournament/:code/reveal" element={<TournamentReveal />} />
           <Route path="/tournament/:code/team/:teamId/:token" element={<TournamentView />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

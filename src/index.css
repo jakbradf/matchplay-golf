@@ -1512,6 +1512,10 @@ body {
   justify-content: flex-end;
   padding: 4px 0 0;
   min-height: 40px;
+  /* Home is the one page with no <Header>, so nothing else here clears the
+     iOS status bar / notch when the app runs standalone (installed PWA) —
+     without this the Sign in button sits underneath it and can't be tapped. */
+  padding-top: max(4px, env(safe-area-inset-top));
 }
 
 .user-menu-signin {

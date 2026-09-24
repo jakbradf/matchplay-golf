@@ -6,6 +6,7 @@ import JoinGame from './pages/JoinGame';
 import GameView from './pages/GameView';
 import Results from './pages/Results';
 import WatchGame from './pages/WatchGame';
+import RevealGame from './pages/RevealGame';
 import MyGames from './pages/MyGames';
 import MyTournaments from './pages/MyTournaments';
 import MyPlayers from './pages/MyPlayers';
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/game/:code" element={<GameView />} />
           <Route path="/game/:code/results" element={<Results />} />
           <Route path="/game/:code/watch" element={<WatchGame />} />
+          <Route path="/game/:code/reveal" element={<RevealGame />} />
           <Route path="/my-games" element={<MyGames />} />
           <Route path="/my-tournaments" element={<MyTournaments />} />
           <Route path="/my-players" element={<MyPlayers />} />

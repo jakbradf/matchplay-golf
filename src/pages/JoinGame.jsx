@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import PlayerClaimList from '../components/PlayerClaimList';
@@ -17,6 +17,11 @@ export default function JoinGame() {
   const [error, setError] = useState('');
   const [guestMode, setGuestMode] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
+
+  const teamParam = searchParams.get('team');
+  const invitedTeamIndex = teamParam !== null && !Number.isNaN(parseInt(teamParam, 10))
+    ? parseInt(teamParam, 10)
+    : null;
 
   const handleSignIn = async () => {
     setSigningIn(true);
@@ -59,6 +64,16 @@ export default function JoinGame() {
   const handleJoin = () => {
     navigate(`/game/${code.trim().toUpperCase()}`);
   };
+
+  // Invite links land here with a code (and often a team) pre-filled —
+  // look the game up right away instead of waiting for a tap.
+  useEffect(() => {
+    const initialCode = searchParams.get('code');
+    if (initialCode && initialCode.trim().toUpperCase().length === 6) {
+      handleLookup();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !game) handleLookup();
@@ -138,11 +153,18 @@ export default function JoinGame() {
 
             {(user || guestMode) && (
               user ? (
-                <PlayerClaimList game={game} gameCode={code.trim().toUpperCase()} />
+                <PlayerClaimList
+                  game={game}
+                  gameCode={code.trim().toUpperCase()}
+                  invitedTeamIndex={invitedTeamIndex}
+                />
               ) : (
                 game.teams.map((team, ti) => (
-                  <div className="card mt-8" key={ti}>
-                    <p className="section-title-sm">{team.name}</p>
+                  <div className={`card mt-8${ti === invitedTeamIndex ? ' invited-team-card' : ''}`} key={ti}>
+                    <p className="section-title-sm">
+                      {team.name}
+                      {ti === invitedTeamIndex && <span className="invited-badge">You&rsquo;re invited</span>}
+                    </p>
                     <ul className="players-list">
                       {team.players.map((p, pi) => (
                         <li key={pi} className="player-item">

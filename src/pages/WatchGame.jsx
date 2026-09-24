@@ -42,9 +42,16 @@ export default function WatchGame() {
   const isComplete = game.status === 'complete';
   const isActive = game.status === 'active';
 
-  const [t0pts, t1pts] = computeMatchScore(scores, adjTeams, course.holes);
+  // Keep the last few holes off the public leaderboard so the winner isn't
+  // spoiled before the reveal — the scorer's own view (GameView) is unaffected.
+  const HIDDEN_HOLE_COUNT = 3;
+  const visibleHoles = course.holes.slice(0, Math.max(0, course.holes.length - HIDDEN_HOLE_COUNT));
+  const firstHiddenHole = visibleHoles.length + 1;
+  const lastHiddenHole = course.holes.length;
+  const publicCourse = { ...course, holes: visibleHoles };
+
+  const [t0pts, t1pts] = computeMatchScore(scores, adjTeams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
-  const isAllSquare = status === 'ALL SQUARE';
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
 
   const liveIndicator = isActive ? (
@@ -54,13 +61,17 @@ export default function WatchGame() {
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column' }}>
       <Header
-        title={isComplete ? 'Final Results' : `${course.name.split(' ')[0]} — Live`}
+        title={isComplete ? 'Round Complete' : `${course.name.split(' ')[0]} — Live`}
         rightElement={liveIndicator}
       />
 
       <div className="page" style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="hidden-holes-notice">
+          🤫 Holes {firstHiddenHole}–{lastHiddenHole} are hidden here — the winner is revealed at the banquet!
+        </div>
+
         {isActive && (
-          <MatchStateBlock scores={scores} teams={adjTeams} courseHoles={course.holes} currentHole={game.currentHole} />
+          <MatchStateBlock scores={scores} teams={adjTeams} courseHoles={visibleHoles} currentHole={game.currentHole} />
         )}
 
         {isComplete && (
@@ -68,17 +79,8 @@ export default function WatchGame() {
             <div className="results-trophy">
               <TrophyIcon size={48} color="rgba(255,255,255,0.9)" />
             </div>
-            {isAllSquare ? (
-              <>
-                <div className="results-winner">All Square</div>
-                <div className="results-score">Tied match</div>
-              </>
-            ) : (
-              <>
-                <div className="results-winner">{game.teams[winnerIdx].name}</div>
-                <div className="results-score">{status}</div>
-              </>
-            )}
+            <div className="results-winner">Round Complete</div>
+            <div className="results-score">Final result revealed at the banquet</div>
             <div className="results-subtitle">{game.course.name}</div>
           </div>
         )}
@@ -95,7 +97,11 @@ export default function WatchGame() {
           </div>
         </div>
 
-        <Scorecard scores={scores} teams={game.teams} course={course} />
+        <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--grey-600)', fontWeight: 600, marginTop: -8, marginBottom: 16 }}>
+          {status} thru {visibleHoles.length}
+        </p>
+
+        <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
 
         {isActive && (
           <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--grey-500)', marginTop: 12 }}>

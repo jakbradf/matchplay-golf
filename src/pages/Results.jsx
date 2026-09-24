@@ -37,33 +37,33 @@ export default function Results() {
     );
   }
 
-  const [t0pts, t1pts] = computeMatchScore(scores, game.teams, course.holes);
+  // Keep the last few holes off this page too — it's reachable straight from
+  // "My Games" without going through the scorer's own finish flow.
+  const HIDDEN_HOLE_COUNT = 3;
+  const visibleHoles = course.holes.slice(0, Math.max(0, course.holes.length - HIDDEN_HOLE_COUNT));
+  const firstHiddenHole = visibleHoles.length + 1;
+  const lastHiddenHole = course.holes.length;
+  const publicCourse = { ...course, holes: visibleHoles };
+
+  const [t0pts, t1pts] = computeMatchScore(scores, game.teams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
-  const isAllSquare = status === 'ALL SQUARE';
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
 
   return (
     <div className="app-container">
-      <Header title="Final Results" showBack backTo="/" />
+      <Header title="Round Complete" showBack backTo="/" />
 
       <div className="page">
+        <div className="hidden-holes-notice">
+          🤫 Holes {firstHiddenHole}–{lastHiddenHole} are hidden here — the winner is revealed at the banquet!
+        </div>
+
         <div className="results-banner">
           <div className="results-trophy">
             <TrophyIcon size={56} color="rgba(255,255,255,0.9)" />
           </div>
-          {isAllSquare ? (
-            <>
-              <div className="results-winner">All Square</div>
-              <div className="results-score">Tied match</div>
-            </>
-          ) : (
-            <>
-              <div className="results-winner">
-                {game.teams[winnerIdx].name}
-              </div>
-              <div className="results-score">{status}</div>
-            </>
-          )}
+          <div className="results-winner">Round Complete</div>
+          <div className="results-score">Final result revealed at the banquet</div>
           <div className="results-subtitle">{game.course.name}</div>
         </div>
 
@@ -79,11 +79,14 @@ export default function Results() {
             <div className="summary-points">{t1pts}</div>
           </div>
         </div>
+        <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--grey-600)', fontWeight: 600, marginTop: -8 }}>
+          {status} thru {visibleHoles.length}
+        </p>
 
         <div className="divider" />
 
-        <p className="section-title">Full Scorecard</p>
-        <Scorecard scores={scores} teams={game.teams} course={course} />
+        <p className="section-title">Scorecard (thru {visibleHoles.length})</p>
+        <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button

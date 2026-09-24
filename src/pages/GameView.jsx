@@ -36,7 +36,7 @@ function LobbyView({ game, gameCode }) {
         <div className="game-code-hint">{game.course.name}</div>
       </div>
 
-      <PlayerClaimList game={game} gameCode={gameCode} />
+      <PlayerClaimList game={game} gameCode={gameCode} showInviteLinks />
 
       <div style={{ marginTop: 24 }}>
         <button
@@ -143,7 +143,14 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
     await updateGame(gameCode, { currentHole: holeNum });
   };
 
-  const goNext = () => goToHole(Math.min(18, currentHole + 1));
+  const goNext = () => {
+    if (currentHole < 18) {
+      goToHole(currentHole + 1);
+    } else {
+      // Last hole: save and hand off to the scorecard instead of forcing a finish.
+      saveCurrentHole().then(() => setActiveTab('card'));
+    }
+  };
   const goPrev = () => goToHole(Math.max(1, currentHole - 1));
 
   const finishGame = async () => {
@@ -165,7 +172,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   const allPlayers = adjTeams.flatMap(t => t.players);
   const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
 
-  const nextLabel = currentHole >= 18 ? 'Finish' : (holeResult ? `Hole ${currentHole + 1}` : 'Skip ahead');
+  const nextLabel = currentHole >= 18 ? 'Scorecard' : (holeResult ? `Hole ${currentHole + 1}` : 'Skip ahead');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -300,7 +307,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
             </button>
             <button
               className="gm-footer-primary"
-              onClick={currentHole >= 18 ? finishGame : goNext}
+              onClick={goNext}
               disabled={saving}
             >
               {nextLabel}
@@ -312,6 +319,16 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
       {activeTab === 'card' && (
         <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
           <Scorecard scores={allHoleScores} teams={game.teams} course={course} />
+          {currentHole === 18 && game.status === 'active' && (
+            <button
+              className="btn btn-primary btn-full"
+              onClick={finishGame}
+              disabled={saving}
+              style={{ marginTop: 16 }}
+            >
+              {saving ? 'Finishing...' : 'Finish Game'}
+            </button>
+          )}
         </div>
       )}
     </div>

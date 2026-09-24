@@ -2721,3 +2721,228 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ===== REVEAL PRESENTATION ===== */
+.reveal-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--green-dark);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 24px 92px;
+  text-align: center;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.reveal-final {
+  background: linear-gradient(160deg, var(--green-dark), #0d3320 75%);
+}
+
+.reveal-loading {
+  color: var(--grey-300);
+  gap: 16px;
+}
+
+.reveal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.reveal-dots {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.reveal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+}
+
+.reveal-dot.active {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.reveal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 0;
+}
+
+.reveal-kicker {
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 14px;
+}
+
+.reveal-thru {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 26px;
+}
+
+.reveal-teams {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.reveal-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.72;
+  min-width: 110px;
+}
+
+.reveal-team.leading {
+  opacity: 1;
+}
+
+.reveal-team-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.reveal-team-pts {
+  font-size: 3.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.reveal-team.leading .reveal-team-pts {
+  color: var(--gold);
+}
+
+.reveal-vs {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.reveal-status {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 6px;
+}
+
+.reveal-winner-label {
+  font-size: 0.9375rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 14px;
+}
+
+.reveal-winner-name {
+  font-size: clamp(2rem, 8vw, 2.75rem);
+  font-weight: 800;
+  margin: 6px 0;
+  line-height: 1.15;
+}
+
+.reveal-final-pts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.0625rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 8px;
+}
+
+.reveal-nav {
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.reveal-nav-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.reveal-nav-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.reveal-nav-label {
+  min-width: 48px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ===== HIDDEN HOLES NOTICE ===== */
+.hidden-holes-notice {
+  background: var(--gold-light);
+  border: 1.5px solid var(--gold);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--grey-800);
+  margin-bottom: 16px;
+}
+
+/* ===== INVITE ===== */
+.invited-team-card {
+  border: 1.5px solid var(--green-dark);
+  background: var(--green-pale);
+}
+
+.invited-badge {
+  display: inline-block;
+  background: var(--green-dark);
+  color: var(--white);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+

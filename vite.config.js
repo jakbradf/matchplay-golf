@@ -11,6 +11,13 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 600,
     rollupOptions: {
+      // The native build has no VitePWA plugin (see below), so this virtual
+      // module doesn't exist for it to resolve. main.jsx only ever imports
+      // it behind a Capacitor.isNativePlatform() check, so it's never
+      // actually requested at runtime in the native shell — externalizing
+      // it here just lets the native build finish instead of failing to
+      // resolve a module it will never load.
+      external: isCapacitorBuild ? ['virtual:pwa-register'] : [],
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/firebase')) return 'firebase';
@@ -23,6 +30,12 @@ export default defineConfig({
     react(),
     !isCapacitorBuild && VitePWA({
       registerType: 'autoUpdate',
+      // We call registerSW() ourselves in main.jsx (with an auto-reload-once
+      // on activation) instead of relying on the plugin's bare injected
+      // script, which just calls navigator.serviceWorker.register() with no
+      // update/reload logic — so deployed updates weren't reaching anyone
+      // who already had the app open or installed.
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
         name: 'Golf Match',

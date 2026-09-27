@@ -3019,6 +3019,34 @@ body {
   white-space: nowrap;
 }
 
+.reveal-hole-caption {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+.reveal-rank-shot {
+  font-size: 0.75rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reveal-rank-shot-team {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.reveal-rank-shot-team span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .reveal-rank-pts {
   flex-shrink: 0;
   font-weight: 800;

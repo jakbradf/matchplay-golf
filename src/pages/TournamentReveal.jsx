@@ -31,6 +31,31 @@ function subFor(boardKey, row) {
   return row.teamName;
 }
 
+// What a player shot on one specific hole, for the "just revealed" drama.
+function holeShotLabel(gross, par) {
+  if (gross == null) return 'No card';
+  if (gross === 1) return 'Hole in one!';
+  const diff = gross - par;
+  if (diff <= -3) return 'Albatross';
+  if (diff === -2) return 'Eagle';
+  if (diff === -1) return 'Birdie';
+  if (diff === 0) return 'Par';
+  if (diff === 1) return 'Bogey';
+  return `+${diff}`;
+}
+
+function holeShotColor(gross, par) {
+  if (gross == null) return 'rgba(255, 255, 255, 0.4)';
+  const diff = gross - par;
+  if (diff <= -1) return 'var(--gold)';
+  if (diff === 0) return 'rgba(255, 255, 255, 0.85)';
+  return '#ff9d8e';
+}
+
+function grossFor(scores, holeNumber, teamId, playerIndex) {
+  return scores[String(holeNumber)]?.[teamId]?.[`player${playerIndex}gross`] ?? null;
+}
+
 export default function TournamentReveal() {
   const { code } = useParams();
   const navigate = useNavigate();
@@ -74,6 +99,12 @@ export default function TournamentReveal() {
   const tab = BOARD_TABS.find((b) => b.key === activeBoard);
   const rows = (boards[activeBoard] || []).slice(0, 3);
 
+  // Slide 0 is the known "thru 15" baseline everyone already saw live — from
+  // slide 1 on, each slide reveals exactly one previously-hidden hole, so
+  // show what actually happened on it rather than just the running total.
+  const revealedHoleNum = slideIndex > 0 ? slideThrus[slideIndex] : null;
+  const revealedHole = revealedHoleNum ? course.holes[revealedHoleNum - 1] : null;
+
   return (
     <div className={`reveal-screen${isFinal ? ' reveal-final' : ''}`}>
       <button className="reveal-close" onClick={() => navigate(`/tournament/${code}`)} aria-label="Close presentation">
@@ -89,6 +120,9 @@ export default function TournamentReveal() {
       <div className="reveal-body reveal-body-wide">
         <div className="reveal-kicker">{tournament.course.name}</div>
         <div className="reveal-thru">{isFinal ? `Final — Thru ${slideThrus[slideIndex]}` : `Thru ${slideThrus[slideIndex]}`}</div>
+        {revealedHole && (
+          <div className="reveal-hole-caption">Hole {revealedHoleNum} &middot; Par {revealedHole.par}</div>
+        )}
 
         <div className="reveal-board-tabs">
           {BOARD_TABS.map((b) => (
@@ -104,16 +138,39 @@ export default function TournamentReveal() {
 
         <div className="reveal-rank-list">
           {rows.length === 0 && <p className="reveal-empty">No scores yet.</p>}
-          {rows.map((row, i) => (
-            <div key={`${row.teamId}-${row.playerIndex ?? 'team'}`} className={`reveal-rank-row${i === 0 ? ' leader' : ''}`}>
-              <span className="reveal-rank-num">{i + 1}</span>
-              <div className="reveal-rank-info">
-                <span className="reveal-rank-name">{nameFor(activeBoard, row)}</span>
-                <span className="reveal-rank-sub">{subFor(activeBoard, row)}</span>
+          {rows.map((row, i) => {
+            const isTeamRow = activeBoard === 'teamNet';
+            return (
+              <div key={`${row.teamId}-${row.playerIndex ?? 'team'}`} className={`reveal-rank-row${i === 0 ? ' leader' : ''}`}>
+                <span className="reveal-rank-num">{i + 1}</span>
+                <div className="reveal-rank-info">
+                  <span className="reveal-rank-name">{nameFor(activeBoard, row)}</span>
+                  {!revealedHole && <span className="reveal-rank-sub">{subFor(activeBoard, row)}</span>}
+                  {revealedHole && !isTeamRow && (() => {
+                    const gross = grossFor(scores, revealedHoleNum, row.teamId, row.playerIndex);
+                    return (
+                      <span className="reveal-rank-shot" style={{ color: holeShotColor(gross, revealedHole.par) }}>
+                        {holeShotLabel(gross, revealedHole.par)}{gross != null ? ` (${gross})` : ''}
+                      </span>
+                    );
+                  })()}
+                  {revealedHole && isTeamRow && (
+                    <span className="reveal-rank-shot reveal-rank-shot-team">
+                      {row.players.map((p, pi) => {
+                        const gross = grossFor(scores, revealedHoleNum, row.teamId, pi);
+                        return (
+                          <span key={pi} style={{ color: holeShotColor(gross, revealedHole.par) }}>
+                            {p.name.split(' ')[0]}: {holeShotLabel(gross, revealedHole.par)}
+                          </span>
+                        );
+                      })}
+                    </span>
+                  )}
+                </div>
+                <span className="reveal-rank-pts">{fmtPoints(pointsFor(activeBoard, row))}</span>
               </div>
-              <span className="reveal-rank-pts">{fmtPoints(pointsFor(activeBoard, row))}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {isFinal && rows[0] && (

@@ -2932,7 +2932,7 @@ body {
 .reveal-board-tabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-full);
   padding: 4px;
@@ -2958,7 +2958,7 @@ body {
 .reveal-rank-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -2973,7 +2973,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.06);
 }
@@ -3023,8 +3023,8 @@ body {
   font-size: 0.8125rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.6);
-  margin-top: -8px;
-  margin-bottom: 12px;
+  margin-top: -10px;
+  margin-bottom: 8px;
 }
 
 .reveal-rank-shot {

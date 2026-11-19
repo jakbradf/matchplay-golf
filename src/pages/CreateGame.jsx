@@ -6,6 +6,7 @@ import { ALL_COURSES } from '../data/courses';
 import { loadPublicCourses } from '../firebase/courseService';
 import { createGame } from '../firebase/gameService';
 import { getCourseHandicap } from '../utils/scoring';
+import { DEFAULT_SKIN_VALUE, DEFAULT_SKIN_CURRENCY, SKIN_CURRENCIES, formatMoney } from '../utils/skins';
 import { ShareIcon, CloseIcon, SearchIcon, PlusIcon, CameraIcon } from '../components/GolfIcon';
 import { useAuth } from '../contexts/AuthContext';
 import PlayerAvatar from '../components/PlayerAvatar';
@@ -308,7 +309,84 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
 }
 
 // ========== STEP 3: Confirm ==========
-function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading }) {
+function SkinsSetup({ skins, onChange, playerCount }) {
+  const value = parseFloat(skins.value);
+  const valid = !isNaN(value) && value > 0;
+  const freshHole = valid ? value * Math.max(0, playerCount - 1) : null;
+  const isCustom = skins.customCurrency;
+
+  return (
+    <div className="card">
+      <label className="skins-setup-toggle">
+        <div>
+          <p className="section-title-sm" style={{ marginBottom: 0 }}>Skins</p>
+          <p className="skins-setup-hint">Every player for himself on net score. Tied holes carry over.</p>
+        </div>
+        <input
+          type="checkbox"
+          checked={skins.enabled}
+          onChange={(e) => onChange({ ...skins, enabled: e.target.checked })}
+        />
+      </label>
+      {skins.enabled && (
+        <>
+          <div className="skins-setup-value">
+            <span className="confirm-label">Value per skin</span>
+            <input
+              className={`form-input form-input-sm${valid ? '' : ' error'}`}
+              value={skins.value}
+              onChange={(e) => onChange({ ...skins, value: e.target.value.replace(',', '.') })}
+              inputMode="decimal"
+              type="text"
+            />
+          </div>
+          <div className="skins-currency">
+            <span className="confirm-label">Currency</span>
+            <div className="tee-selector skins-currency-options">
+              {SKIN_CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  className={`tee-btn${!isCustom && skins.currency === c.code ? ' active' : ''}`}
+                  onClick={() => onChange({ ...skins, currency: c.code, customCurrency: false })}
+                >
+                  <span className="tee-btn-name">{c.label}</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`tee-btn${isCustom ? ' active' : ''}`}
+                onClick={() => onChange({ ...skins, currency: '', customCurrency: true })}
+              >
+                <span className="tee-btn-name">Custom</span>
+              </button>
+            </div>
+            {isCustom && (
+              <input
+                className={`form-input form-input-sm${skins.currency.trim() ? '' : ' error'}`}
+                value={skins.currency}
+                onChange={(e) => onChange({ ...skins, currency: e.target.value })}
+                placeholder="e.g. SEK, £, beers"
+                maxLength={12}
+                autoFocus
+              />
+            )}
+          </div>
+          {valid && playerCount > 1 && (
+            <p className="skins-setup-hint">
+              With {playerCount} players a hole is worth {formatMoney(freshHole, skins.currency)} to the winner,
+              {' '}{formatMoney(freshHole * 2, skins.currency)} after one carry.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function StepConfirm({ course, selectedTee, teams, skins, onSkinsChange, onConfirm, onBack, loading }) {
+  const playerCount = teams.reduce((n, t) => n + t.players.length, 0);
+  const skinsInvalid = skins.enabled && (!(parseFloat(skins.value) > 0) || !skins.currency.trim());
   return (
     <div className="page">
       <div className="card">
@@ -347,6 +425,8 @@ function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading })
         </div>
       ))}
 
+      <SkinsSetup skins={skins} onChange={onSkinsChange} playerCount={playerCount} />
+
       <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
         <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onBack} disabled={loading}>
           Back
@@ -355,7 +435,7 @@ function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading })
           className="btn btn-primary"
           style={{ flex: 2 }}
           onClick={onConfirm}
-          disabled={loading}
+          disabled={loading || skinsInvalid}
         >
           {loading ? 'Creating...' : 'Create Game'}
         </button>
@@ -456,6 +536,7 @@ export default function CreateGame() {
   };
 
   const [teams, setTeams] = useState(initialTeams);
+  const [skins, setSkins] = useState({ enabled: false, value: String(DEFAULT_SKIN_VALUE), currency: DEFAULT_SKIN_CURRENCY, customCurrency: false });
   const [gameCode, setGameCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -487,6 +568,9 @@ export default function CreateGame() {
         course: effectiveCourse,
         teams: normalizedTeams,
         userId: user?.uid ?? null,
+        skins: skins.enabled
+          ? { enabled: true, value: parseFloat(skins.value), currency: skins.currency.trim() }
+          : null,
       });
       setGameCode(code);
       setStep(4);
@@ -540,6 +624,8 @@ export default function CreateGame() {
           course={effectiveCourse}
           selectedTee={selectedTee}
           teams={teams}
+          skins={skins}
+          onSkinsChange={setSkins}
           onConfirm={handleConfirm}
           onBack={() => setStep(2)}
           loading={loading}

@@ -3089,3 +3089,101 @@ body {
   border-radius: var(--radius-full);
 }
 
+
+/* ===== SKINS ===== */
+.skins-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 20px 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--grey-200);
+  background: var(--white);
+}
+.skins-banner-won { background: var(--win-light); border-color: var(--win); }
+.skins-banner-carry { background: var(--gold-light); border-color: var(--gold); }
+.skins-banner-left { display: flex; flex-direction: column; min-width: 0; }
+.skins-banner-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--grey-500);
+}
+.skins-banner-line { font-size: 0.875rem; font-weight: 600; color: var(--grey-900); }
+.skins-banner-won .skins-banner-line { color: var(--win); }
+.skins-banner-worth {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--grey-900);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.skins-card {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-top: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.skins-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.skins-card-rate { font-size: 0.8125rem; color: var(--grey-600); }
+.skins-standing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--grey-100);
+}
+.skins-standing-row:last-child { border-bottom: none; }
+.skins-standing-name { display: flex; flex-direction: column; font-weight: 600; color: var(--grey-900); }
+.skins-standing-sub { font-size: 0.75rem; font-weight: 400; color: var(--grey-600); }
+.skins-standing-net { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--grey-700); }
+.skins-standing-net.up { color: var(--win); }
+.skins-standing-net.down { color: var(--red); }
+.skins-carry-note {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: #7a6008;
+  background: var(--gold-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+.skins-holes {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 16px;
+}
+.skins-hole {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 6px;
+  font-size: 0.8125rem;
+  padding: 3px 0;
+  color: var(--grey-700);
+}
+.skins-hole-num { color: var(--grey-500); font-variant-numeric: tabular-nums; }
+.skins-hole-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skins-hole-worth { font-variant-numeric: tabular-nums; }
+.skins-hole-won .skins-hole-who { color: var(--win); font-weight: 600; }
+.skins-hole-carry .skins-hole-who { color: #7a6008; }
+.skins-hole-incomplete, .skins-hole-pending { color: var(--grey-400); }
+
+.skins-setup-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.skins-setup-toggle input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--green-dark); }
+.skins-setup-hint { font-size: 0.8125rem; color: var(--grey-600); margin-top: 4px; }
+.skins-setup-value { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.skins-setup-value .form-input { max-width: 110px; }
+.skins-currency { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.skins-currency-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.skins-currency-options .tee-btn { padding: 8px 4px; min-width: 0; }

@@ -5,6 +5,8 @@ import MatchStateBlock from '../components/MatchStateBlock';
 import Scorecard from '../components/Scorecard';
 import { computeMatchScore, getMatchStatus, adjustTeamsForCourse } from '../utils/scoring';
 import { TrophyIcon } from '../components/GolfIcon';
+import SkinsSummary from '../components/SkinsSummary';
+import { computeSkins } from '../utils/skins';
 
 export default function WatchGame() {
   const { code } = useParams();
@@ -53,6 +55,8 @@ export default function WatchGame() {
   const [t0pts, t1pts] = computeMatchScore(scores, adjTeams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
+  const skins = game.skins?.enabled ? game.skins : null;
+  const skinsResult = skins ? computeSkins(scores, adjTeams, visibleHoles, skins.value) : null;
 
   const liveIndicator = isActive ? (
     <div className="live-badge">LIVE</div>
@@ -102,6 +106,15 @@ export default function WatchGame() {
         </p>
 
         <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
+
+        {skinsResult && (
+          <SkinsSummary
+            skinsResult={skinsResult}
+            value={skins.value}
+            currency={skins.currency}
+            hiddenNote={`holes ${firstHiddenHole}–${lastHiddenHole} hidden`}
+          />
+        )}
 
         {isActive && (
           <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--grey-500)', marginTop: 12 }}>

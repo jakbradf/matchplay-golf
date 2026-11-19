@@ -8,6 +8,9 @@ import GmPlayerScoreRow from '../components/GmPlayerScoreRow';
 import ClosestToPinSelector from '../components/ClosestToPinSelector';
 import Scorecard from '../components/Scorecard';
 import PlayerClaimList from '../components/PlayerClaimList';
+import SkinsHoleBanner from '../components/SkinsHoleBanner';
+import SkinsSummary from '../components/SkinsSummary';
+import { computeSkins } from '../utils/skins';
 import { updateGame, saveHoleScores } from '../firebase/gameService';
 import { getTeamBestNet, getHoleResult, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
 import { ShareIcon, ChevronLeftIcon } from '../components/GolfIcon';
@@ -171,6 +174,8 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   const holeResult = getHoleResult(effectiveScores, adjTeams, hole);
   const allPlayers = adjTeams.flatMap(t => t.players);
   const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
+  const skins = game.skins?.enabled ? game.skins : null;
+  const skinsResult = skins ? computeSkins(allHoleScores, adjTeams, course.holes, skins.value) : null;
 
   const nextLabel = currentHole >= 18 ? 'Scorecard' : (holeResult ? `Hole ${currentHole + 1}` : 'Skip ahead');
 
@@ -236,6 +241,10 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
                   net1={getTeamBestNet(effectiveScores.team1, adjTeams[1].players, hole, minHandicap)}
                 />
               </div>
+            )}
+
+            {skinsResult && (
+              <SkinsHoleBanner skinsResult={skinsResult} holeNumber={currentHole} currency={skins.currency} />
             )}
 
             {hole.isParThree && (
@@ -319,6 +328,9 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
       {activeTab === 'card' && (
         <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
           <Scorecard scores={allHoleScores} teams={game.teams} course={course} />
+          {skinsResult && (
+            <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
+          )}
           {currentHole === 18 && game.status === 'active' && (
             <button
               className="btn btn-primary btn-full"

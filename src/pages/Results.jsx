@@ -2,7 +2,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../hooks/useGame';
 import Header from '../components/Header';
 import Scorecard from '../components/Scorecard';
-import { computeMatchScore, getMatchStatus } from '../utils/scoring';
+import { computeMatchScore, getMatchStatus, adjustTeamsForCourse } from '../utils/scoring';
+import SkinsSummary from '../components/SkinsSummary';
+import { computeSkins } from '../utils/skins';
 import { TrophyIcon } from '../components/GolfIcon';
 
 export default function Results() {
@@ -48,6 +50,10 @@ export default function Results() {
   const [t0pts, t1pts] = computeMatchScore(scores, game.teams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
+  const skins = game.skins?.enabled ? game.skins : null;
+  const skinsResult = skins
+    ? computeSkins(scores, adjustTeamsForCourse(game.teams, course), visibleHoles, skins.value)
+    : null;
 
   return (
     <div className="app-container">
@@ -87,6 +93,15 @@ export default function Results() {
 
         <p className="section-title">Scorecard (thru {visibleHoles.length})</p>
         <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
+
+        {skinsResult && (
+          <SkinsSummary
+            skinsResult={skinsResult}
+            value={skins.value}
+            currency={skins.currency}
+            hiddenNote={`holes ${firstHiddenHole}–${lastHiddenHole} hidden`}
+          />
+        )}
 
         <div className="game-code-display mt-16">
           <div className="game-code-label">Game Code</div>

@@ -3187,3 +3187,14 @@ body {
 .skins-currency { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .skins-currency-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .skins-currency-options .tee-btn { padding: 8px 4px; min-width: 0; }
+.remove-team-btn {
+  background: none;
+  border: none;
+  color: var(--red);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.gm-lb-team-tag.c { background: #e7edf8; color: var(--navy); }
+.gm-lb-team-tag.d { background: var(--gold-light); color: #7a6008; }

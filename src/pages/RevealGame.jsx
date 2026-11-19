@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../hooks/useGame';
 import { computeMatchScore, getMatchStatus, adjustTeamsForCourse } from '../utils/scoring';
 import { TrophyIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '../components/GolfIcon';
+import { getGameType, GAME_TYPES } from '../utils/skins';
 
 // Presentation mode for the banquet: step through the standings thru the
 // last four holes, one per slide, ending with the actual winner revealed.
@@ -39,6 +40,12 @@ export default function RevealGame() {
         <button className="btn btn-secondary mt-16" onClick={() => navigate('/')}>Go Home</button>
       </div>
     );
+  }
+
+  // Skins games have no banquet reveal; send them to the results page.
+  if (getGameType(game) === GAME_TYPES.SKINS) {
+    navigate(`/game/${code}/results`, { replace: true });
+    return null;
   }
 
   const adjTeams = adjustTeamsForCourse(game.teams, course);

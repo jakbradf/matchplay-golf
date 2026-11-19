@@ -15,10 +15,11 @@ export default function SkinsSummary({ skinsResult, value, currency, hiddenNote 
 
       <div className="skins-standings">
         {ranked.map((t) => (
-          <div key={`${t.player.ti}-${t.player.pi}`} className="skins-standing-row">
+          <div key={t.unit.key} className="skins-standing-row">
             <div className="skins-standing-name">
-              <span>{t.player.name}</span>
+              <span>{t.unit.name}</span>
               <span className="skins-standing-sub">
+                {t.unit.sub ? `${t.unit.sub} · ` : ''}
                 {t.holesWon > 0 ? `${t.skins} skin${t.skins > 1 ? 's' : ''} · ${t.holesWon} hole${t.holesWon > 1 ? 's' : ''}` : 'no skins yet'}
               </span>
             </div>

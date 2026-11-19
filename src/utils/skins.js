@@ -3,53 +3,108 @@ import { getStrokesOnHole } from './scoring';
 export const DEFAULT_SKIN_VALUE = 10;
 export const DEFAULT_SKIN_CURRENCY = 'kr';
 
-// Every player in the game as an individual, with a pointer back to their team slot.
-export function getSkinsPlayers(teams) {
-  return teams.flatMap((team, ti) =>
-    team.players.map((p, pi) => ({ ...p, ti, pi, teamName: team.name }))
-  );
+export const GAME_TYPES = {
+  MATCHPLAY: 'matchplay',
+  SKINS: 'skins',
+};
+
+export function getGameType(game) {
+  return game?.gameType === GAME_TYPES.SKINS ? GAME_TYPES.SKINS : GAME_TYPES.MATCHPLAY;
 }
 
-// Net score for one player on one hole, strokes given off the lowest handicap in the game.
-function playerNet(holeScores, player, hole, minHandicap) {
-  const gross = holeScores?.[`team${player.ti}`]?.[`player${player.pi}gross`];
-  if (gross == null) return null;
-  return gross - getStrokesOnHole(Math.max(0, player.handicap - minHandicap), hole.strokeIndex);
+// Skins settings for a game: a skins game always has them, a matchplay game only if the side game is on.
+export function getSkinsSettings(game) {
+  if (!game) return null;
+  if (getGameType(game) === GAME_TYPES.SKINS) {
+    return {
+      value: game.skins?.value ?? DEFAULT_SKIN_VALUE,
+      currency: game.skins?.currency ?? DEFAULT_SKIN_CURRENCY,
+    };
+  }
+  return game.skins?.enabled ? { value: game.skins.value, currency: game.skins.currency } : null;
 }
 
 /*
- * Skins: every player puts one skin (`value`) into the pot on every hole.
+ * A skins "unit" is whoever competes for the pot: one player (side game in matchplay)
+ * or one team (skins game, best net in the team counts).
+ * Each unit: { key, name, sub, members: [{ ti, pi, handicap, name }] }
+ */
+export function skinsUnitsFromPlayers(teams) {
+  return teams.flatMap((team, ti) =>
+    team.players.map((p, pi) => ({
+      key: `p${ti}-${pi}`,
+      name: p.name,
+      sub: null,
+      members: [{ ti, pi, handicap: p.handicap, name: p.name }],
+    }))
+  );
+}
+
+export function skinsUnitsFromTeams(teams) {
+  return teams.map((team, ti) => {
+    const solo = team.players.length === 1;
+    return {
+      key: `t${ti}`,
+      name: solo ? team.players[0].name : team.name,
+      sub: solo ? null : team.players.map((p) => p.name).join(' & '),
+      members: team.players.map((p, pi) => ({ ti, pi, handicap: p.handicap, name: p.name })),
+    };
+  });
+}
+
+// Units for a game, depending on its type.
+export function getSkinsUnits(game, adjTeams) {
+  return getGameType(game) === GAME_TYPES.SKINS
+    ? skinsUnitsFromTeams(adjTeams)
+    : skinsUnitsFromPlayers(adjTeams);
+}
+
+// Display name for a team in a skins game (solo teams show the player's name).
+export function skinsTeamLabel(team) {
+  return team.players.length === 1 ? team.players[0].name : team.name;
+}
+
+/*
+ * Every unit puts one skin (`value`) into the pot on every hole.
  * Lowest net score on the hole takes the pot. A tie for lowest carries the pot
- * to the next hole.
+ * to the next hole. For a team, its best net counts (needs every member's score).
  *
  * "Worth" is what the winner gains from the others:
- *   skins on the hole × (players − 1) × value
- * e.g. 4 players at 10 kr: 30 kr on a fresh hole, 60 kr after one carry.
+ *   skins on the hole × (units − 1) × value
+ * e.g. 4 units at 10 kr: 30 kr on a fresh hole, 60 kr after one carry.
  *
  * Holes are resolved in order. If a hole is missing a score, every hole after it
  * stays 'pending' because its carry-in isn't known yet.
  *
- * teams must already be course-adjusted (adjustTeamsForCourse).
+ * Strokes are given off the lowest handicap among all players.
+ * Handicaps must already be course-adjusted (adjustTeamsForCourse).
  */
-export function computeSkins(allHoleScores, teams, courseHoles, value = DEFAULT_SKIN_VALUE) {
-  const players = getSkinsPlayers(teams);
-  const n = players.length;
-  const minHandicap = Math.min(...players.map((p) => p.handicap));
+export function computeSkins(allHoleScores, units, courseHoles, value = DEFAULT_SKIN_VALUE) {
+  const n = units.length;
+  const allMembers = units.flatMap((u) => u.members);
+  const minHandicap = Math.min(...allMembers.map((m) => m.handicap));
   const perSkinGain = value * Math.max(0, n - 1);
 
-  const totals = players.map((p) => ({ player: p, skins: 0, holesWon: 0, net: 0 }));
+  const memberNet = (holeScores, m, hole) => {
+    const gross = holeScores?.[`team${m.ti}`]?.[`player${m.pi}gross`];
+    if (gross == null) return null;
+    return gross - getStrokesOnHole(Math.max(0, m.handicap - minHandicap), hole.strokeIndex);
+  };
+
+  const unitNet = (holeScores, u, hole) => {
+    const nets = u.members.map((m) => memberNet(holeScores, m, hole));
+    if (nets.some((x) => x == null)) return null;
+    return Math.min(...nets);
+  };
+
+  const totals = units.map((u) => ({ unit: u, skins: 0, holesWon: 0, net: 0 }));
   const holes = [];
   let carry = 0;
   let blocked = false;
 
   courseHoles.forEach((hole) => {
     const skinsOnHole = carry + 1;
-    const base = {
-      hole,
-      skinsOnHole,
-      carriedIn: carry,
-      worth: skinsOnHole * perSkinGain,
-    };
+    const base = { hole, skinsOnHole, carriedIn: carry, worth: skinsOnHole * perSkinGain };
 
     if (blocked) {
       holes.push({ ...base, status: 'pending', nets: null, winner: null });
@@ -57,7 +112,7 @@ export function computeSkins(allHoleScores, teams, courseHoles, value = DEFAULT_
     }
 
     const holeScores = allHoleScores[String(hole.number)];
-    const nets = players.map((p) => playerNet(holeScores, p, hole, minHandicap));
+    const nets = units.map((u) => unitNet(holeScores, u, hole));
 
     if (nets.some((x) => x == null)) {
       blocked = true;
@@ -70,7 +125,7 @@ export function computeSkins(allHoleScores, teams, courseHoles, value = DEFAULT_
 
     if (leaders.length > 1) {
       carry = skinsOnHole;
-      holes.push({ ...base, status: 'carry', nets, winner: null, tiedPlayers: leaders.map((i) => players[i]) });
+      holes.push({ ...base, status: 'carry', nets, best, winner: null, tied: leaders.map((i) => units[i]) });
       return;
     }
 
@@ -85,7 +140,7 @@ export function computeSkins(allHoleScores, teams, courseHoles, value = DEFAULT_
       }
     });
     carry = 0;
-    holes.push({ ...base, status: 'won', nets, winner: players[w], winnerIdx: w });
+    holes.push({ ...base, status: 'won', nets, best, winner: units[w], winnerIdx: w });
   });
 
   const lastResolved = [...holes].reverse().find((h) => h.status === 'won' || h.status === 'carry');
@@ -93,11 +148,12 @@ export function computeSkins(allHoleScores, teams, courseHoles, value = DEFAULT_
   const openCarry = lastResolved?.status === 'carry' ? lastResolved.skinsOnHole : 0;
 
   return {
-    players,
+    units,
     holes,
     totals,
     openCarry,
     openCarryWorth: openCarry * perSkinGain,
+    minHandicap,
     complete: holes.length > 0 && holes.every((h) => h.status === 'won' || h.status === 'carry'),
   };
 }

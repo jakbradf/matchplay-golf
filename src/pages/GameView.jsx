@@ -10,7 +10,11 @@ import Scorecard from '../components/Scorecard';
 import PlayerClaimList from '../components/PlayerClaimList';
 import SkinsHoleBanner from '../components/SkinsHoleBanner';
 import SkinsSummary from '../components/SkinsSummary';
-import { computeSkins } from '../utils/skins';
+import SkinsStateBlock from '../components/SkinsStateBlock';
+import Leaderboard from '../components/Leaderboard';
+import { computeSkins, getGameType, getSkinsSettings, getSkinsUnits, skinsTeamLabel, GAME_TYPES } from '../utils/skins';
+
+const TEAM_MARKS = ['#00a651', '#8fa197', '#10429b', '#d4af37'];
 import { updateGame, saveHoleScores } from '../firebase/gameService';
 import { getTeamBestNet, getHoleResult, getMatchplayStrokes, adjustTeamsForCourse } from '../utils/scoring';
 import { ShareIcon, ChevronLeftIcon } from '../components/GolfIcon';
@@ -82,11 +86,13 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   const hole = course.holes[currentHole - 1];
   const savedHoleScores = scores[String(currentHole)] || {};
 
+  const isSkinsGame = getGameType(game) === GAME_TYPES.SKINS;
+  const teamKeys = game.teams.map((_, ti) => `team${ti}`);
+  const mergeTeams = (saved, local) =>
+    Object.fromEntries(teamKeys.map((k) => [k, { ...(saved?.[k] || {}), ...(local?.[k] || {}) }]));
+
   // Merge saved scores with local changes
-  const effectiveScores = {
-    team0: { ...savedHoleScores.team0, ...localScores.team0 },
-    team1: { ...savedHoleScores.team1, ...localScores.team1 },
-  };
+  const effectiveScores = mergeTeams(savedHoleScores, localScores);
 
   const closestTeam =
     effectiveScores.team0?.closestToPin === true ? 0 :
@@ -125,10 +131,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   }, [savedHoleScores]);
 
   const saveCurrentHole = async () => {
-    const toSave = {
-      team0: { ...savedHoleScores.team0, ...localScores.team0 },
-      team1: { ...savedHoleScores.team1, ...localScores.team1 },
-    };
+    const toSave = mergeTeams(savedHoleScores, localScores);
     setSaving(true);
     try {
       await saveHoleScores(gameCode, currentHole, toSave);
@@ -165,19 +168,23 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
   if (Object.keys(localScores).length > 0) {
     allHoleScores[String(currentHole)] = {
       ...allHoleScores[String(currentHole)],
-      team0: { ...(allHoleScores[String(currentHole)]?.team0 || {}), ...localScores.team0 },
-      team1: { ...(allHoleScores[String(currentHole)]?.team1 || {}), ...localScores.team1 },
+      ...mergeTeams(allHoleScores[String(currentHole)], localScores),
     };
   }
 
   const adjTeams = adjustTeamsForCourse(game.teams, course);
-  const holeResult = getHoleResult(effectiveScores, adjTeams, hole);
+  const holeResult = isSkinsGame ? null : getHoleResult(effectiveScores, adjTeams, hole);
   const allPlayers = adjTeams.flatMap(t => t.players);
   const minHandicap = Math.min(...allPlayers.map(p => p.handicap));
-  const skins = game.skins?.enabled ? game.skins : null;
-  const skinsResult = skins ? computeSkins(allHoleScores, adjTeams, course.holes, skins.value) : null;
+  const skins = getSkinsSettings(game);
+  const skinsResult = skins ? computeSkins(allHoleScores, getSkinsUnits(game, adjTeams), course.holes, skins.value) : null;
+  const skinsHole = skinsResult?.holes[currentHole - 1];
+  const skinsWinnerTeam = isSkinsGame && skinsHole?.status === 'won' ? skinsHole.winner.members[0].ti : null;
+  const holeSettled = isSkinsGame
+    ? (skinsHole && skinsHole.status !== 'incomplete' && skinsHole.status !== 'pending')
+    : !!holeResult;
 
-  const nextLabel = currentHole >= 18 ? 'Scorecard' : (holeResult ? `Hole ${currentHole + 1}` : 'Skip ahead');
+  const nextLabel = currentHole >= 18 ? 'Scorecard' : (holeSettled ? `Hole ${currentHole + 1}` : 'Skip ahead');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -192,7 +199,11 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
             >
               <ChevronLeftIcon size={18} color="#5b6b62" />
             </button>
-            <span className="gm-score-eyebrow">{game.teams[0].name} vs {game.teams[1].name}</span>
+            <span className="gm-score-eyebrow">
+              {isSkinsGame
+                ? `Skins · ${game.teams.map(skinsTeamLabel).join(', ')}`
+                : `${game.teams[0].name} vs ${game.teams[1].name}`}
+            </span>
           </div>
           <span className="gm-score-course">{course.name}</span>
         </div>
@@ -202,7 +213,9 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
         </div>
       </div>
 
-      <MatchStateBlock scores={allHoleScores} teams={adjTeams} courseHoles={course.holes} currentHole={currentHole} />
+      {isSkinsGame
+        ? <SkinsStateBlock skinsResult={skinsResult} currency={skins.currency} currentHole={currentHole} />
+        : <MatchStateBlock scores={allHoleScores} teams={adjTeams} courseHoles={course.holes} currentHole={currentHole} />}
 
       <div className="game-share-bar">
         <div className="game-share-code">
@@ -247,7 +260,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
               <SkinsHoleBanner skinsResult={skinsResult} holeNumber={currentHole} currency={skins.currency} />
             )}
 
-            {hole.isParThree && (
+            {!isSkinsGame && hole.isParThree && (
               <div style={{ padding: '0 20px' }}>
                 <ClosestToPinSelector
                   teams={game.teams}
@@ -261,10 +274,10 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
               const teamScores = effectiveScores[`team${ti}`] || {};
               const bestNet = getTeamBestNet(teamScores, team.players, hole, minHandicap);
               return (
-                <div key={ti} className={`gm-team-block${ti === 1 ? ' alt' : ''}${holeResult && holeResult.result === `team${ti}` ? ' winner' : ''}`}>
+                <div key={ti} className={`gm-team-block${ti % 2 === 1 ? ' alt' : ''}${(holeResult && holeResult.result === `team${ti}`) || skinsWinnerTeam === ti ? ' winner' : ''}`}>
                   <div className="gm-team-header">
-                    <span className="gm-team-mark" style={{ background: ti === 0 ? '#00a651' : '#8fa197' }} />
-                    <span className="gm-team-name">{team.name}</span>
+                    <span className="gm-team-mark" style={{ background: TEAM_MARKS[ti % TEAM_MARKS.length] }} />
+                    <span className="gm-team-name">{isSkinsGame ? skinsTeamLabel(team) : team.name}</span>
                     <span className="gm-team-best">{bestNet !== Infinity ? `net ${bestNet}` : '—'}</span>
                   </div>
                   {team.players.map((player, pi) => (
@@ -281,7 +294,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
               );
             })}
 
-            <div className="extra-points">
+            {!isSkinsGame && <div className="extra-points">
               <div className="extra-points-label">Extra Points</div>
               <div className="extra-points-teams">
                 {game.teams.map((team, ti) => {
@@ -307,7 +320,7 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
                   );
                 })}
               </div>
-            </div>
+            </div>}
           </div>
 
           <div className="gm-score-footer">
@@ -327,9 +340,18 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
 
       {activeTab === 'card' && (
         <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
-          <Scorecard scores={allHoleScores} teams={game.teams} course={course} />
-          {skinsResult && (
-            <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
+          {isSkinsGame ? (
+            <>
+              <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
+              <Leaderboard scores={allHoleScores} teams={game.teams} course={course} variant="skins" />
+            </>
+          ) : (
+            <>
+              <Scorecard scores={allHoleScores} teams={game.teams} course={course} />
+              {skinsResult && (
+                <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
+              )}
+            </>
           )}
           {currentHole === 18 && game.status === 'active' && (
             <button

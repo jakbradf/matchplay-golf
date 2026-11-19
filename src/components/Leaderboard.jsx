@@ -57,12 +57,14 @@ function HalfGrid({ half, label }) {
   );
 }
 
-export default function Leaderboard({ scores, teams, course, onEndGame }) {
+export default function Leaderboard({ scores, teams, course, onEndGame, variant = 'matchplay' }) {
+  const isSkins = variant === 'skins';
+  const tabs = isSkins ? TABS.filter((t) => t.key !== 'match') : TABS;
   const [tab, setTab] = useState('gross');
   const [openKey, setOpenKey] = useState(null);
 
   const adjTeams = adjustTeamsForCourse(teams, course);
-  const rows = getPlayerStats(scores, adjTeams, course.holes, tab === 'net' ? 'net' : 'gross');
+  const rows = getPlayerStats(scores, adjTeams, course.holes, tab === 'net' ? 'net' : 'gross', !isSkins);
 
   const sorted = [...rows].sort((a, b) => {
     if (tab === 'match') return b.up - a.up || a.toPar - b.toPar;
@@ -77,7 +79,7 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
   return (
     <div>
       <div className="gm-lb-tabs">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.key}
             className={`gm-lb-tab${tab === t.key ? ' active' : ''}`}
@@ -89,7 +91,7 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
       </div>
 
       <p style={{ fontSize: '0.78rem', color: 'var(--grey-600)', margin: '10px 0 0' }}>
-        Fourball &middot; better ball &middot; {modeLabel} &middot; thru {maxThru}
+        {isSkins ? 'Skins' : <>Fourball &middot; better ball</>} &middot; {modeLabel} &middot; thru {maxThru}
       </p>
 
       <div className="gm-lb-colheader">
@@ -115,7 +117,9 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
               <div className="gm-lb-name-col">
                 <div className="gm-lb-name-row">
                   <span className="gm-lb-name">{r.player.name}</span>
-                  <span className={`gm-lb-team-tag ${r.teamLabel.toLowerCase()}`}>{r.teamLabel}</span>
+                  {!(isSkins && teams[r.teamIndex].players.length === 1) && (
+                    <span className={`gm-lb-team-tag ${r.teamLabel.toLowerCase()}`}>{r.teamLabel}</span>
+                  )}
                 </div>
                 <div className="gm-lb-meta">hcp {r.player.handicap} net {r.net}</div>
               </div>

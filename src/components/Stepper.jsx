@@ -1,11 +1,11 @@
 import { CheckIcon } from './GolfIcon';
 
-const STEPS = ['Course', 'Teams', 'Confirm', 'Share'];
+const DEFAULT_STEPS = ['Course', 'Teams', 'Confirm', 'Share'];
 
-export default function Stepper({ currentStep }) {
+export default function Stepper({ currentStep, steps = DEFAULT_STEPS }) {
   return (
     <div className="stepper">
-      {STEPS.map((label, idx) => {
+      {steps.map((label, idx) => {
         const stepNum = idx + 1;
         const isDone = stepNum < currentStep;
         const isActive = stepNum === currentStep;

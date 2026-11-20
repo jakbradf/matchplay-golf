@@ -528,6 +528,41 @@ export const HAGA_BLA_GUL_GK = {
   ]
 };
 
+export const ESTELA_GC = {
+  id: 'estela-gc',
+  name: 'Estela Golf Club',
+  location: 'Póvoa de Varzim (Porto), Portugal',
+  par: 72,
+  courseRating: 71.2,
+  slopeRating: 128,
+  // Men's ratings, from the Portuguese federation (FPG / DataGolf) card
+  tees: [
+    { name: 'White',  courseRating: 72.9, slopeRating: 132, par: 72, distances: [437, 140, 403, 195, 383, 377, 478, 307, 356, 367, 328, 165, 443, 343, 477, 335, 145, 350] },
+    { name: 'Yellow', courseRating: 71.2, slopeRating: 128, par: 72, distances: [418, 126, 386, 162, 369, 365, 461, 290, 338, 350, 313, 149, 424, 324, 464, 314, 120, 332] },
+    { name: 'Red',    courseRating: 68.2, slopeRating: 122, par: 72, distances: [372, 113, 342, 142, 335, 340, 421, 267, 301, 316, 286, 128, 367, 300, 400, 291, 102, 282] },
+  ],
+  holes: [
+    { number: 1,  par: 5, strokeIndex: 13, distance: 418, isParThree: false },
+    { number: 2,  par: 3, strokeIndex: 17, distance: 126, isParThree: true  },
+    { number: 3,  par: 4, strokeIndex: 1,  distance: 386, isParThree: false },
+    { number: 4,  par: 3, strokeIndex: 7,  distance: 162, isParThree: true  },
+    { number: 5,  par: 4, strokeIndex: 4,  distance: 369, isParThree: false },
+    { number: 6,  par: 4, strokeIndex: 2,  distance: 365, isParThree: false },
+    { number: 7,  par: 5, strokeIndex: 11, distance: 461, isParThree: false },
+    { number: 8,  par: 4, strokeIndex: 15, distance: 290, isParThree: false },
+    { number: 9,  par: 4, strokeIndex: 12, distance: 338, isParThree: false },
+    { number: 10, par: 4, strokeIndex: 5,  distance: 350, isParThree: false },
+    { number: 11, par: 4, strokeIndex: 16, distance: 313, isParThree: false },
+    { number: 12, par: 3, strokeIndex: 10, distance: 149, isParThree: true  },
+    { number: 13, par: 5, strokeIndex: 14, distance: 424, isParThree: false },
+    { number: 14, par: 4, strokeIndex: 9,  distance: 324, isParThree: false },
+    { number: 15, par: 5, strokeIndex: 3,  distance: 464, isParThree: false },
+    { number: 16, par: 4, strokeIndex: 8,  distance: 314, isParThree: false },
+    { number: 17, par: 3, strokeIndex: 18, distance: 120, isParThree: true  },
+    { number: 18, par: 4, strokeIndex: 6,  distance: 332, isParThree: false },
+  ]
+};
+
 export const ALL_COURSES = [
   STROMSTAD_GK,
   DROBAK_GK,
@@ -547,6 +582,7 @@ export const ALL_COURSES = [
   HAGA_GUL_ROD_GK,
   HAGA_BLA_ROD_GK,
   HAGA_BLA_GUL_GK,
+  ESTELA_GC,
 ];
 
 export function getCourseById(id) {

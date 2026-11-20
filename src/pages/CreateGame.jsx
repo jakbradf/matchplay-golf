@@ -6,13 +6,60 @@ import { ALL_COURSES } from '../data/courses';
 import { loadPublicCourses } from '../firebase/courseService';
 import { createGame } from '../firebase/gameService';
 import { getCourseHandicap } from '../utils/scoring';
+import { DEFAULT_SKIN_VALUE, DEFAULT_SKIN_CURRENCY, SKIN_CURRENCIES, GAME_TYPES, formatMoney, skinsTeamLabel } from '../utils/skins';
 import { ShareIcon, CloseIcon, SearchIcon, PlusIcon, CameraIcon } from '../components/GolfIcon';
 import { useAuth } from '../contexts/AuthContext';
 import PlayerAvatar from '../components/PlayerAvatar';
 import StoredPlayerPicker from '../components/StoredPlayerPicker';
 
-// ========== STEP 1: Course Selection ==========
-function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext, onCreateCourse }) {
+// ========== STEP 1: Game Type ==========
+const GAME_TYPE_OPTIONS = [
+  {
+    type: GAME_TYPES.MATCHPLAY,
+    name: 'Matchplay',
+    desc: '2 teams, 4-ball better ball with handicap. Optional skins side game.',
+    stats: ['2 teams', '1–2 players each'],
+  },
+  {
+    type: GAME_TYPES.SKINS,
+    name: 'Skins',
+    desc: 'Lowest net wins the hole and the pot. Tied holes carry over. Best net counts for teams of two.',
+    stats: ['2–4 teams', '1–2 players each'],
+  },
+];
+
+function StepGameType({ gameType, onSelect, onNext }) {
+  return (
+    <>
+      <div className="page" style={{ paddingBottom: 0 }}>
+        <p className="section-title-sm">Game Type</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {GAME_TYPE_OPTIONS.map((o) => (
+            <button
+              key={o.type}
+              className={`course-card${gameType === o.type ? ' selected' : ''}`}
+              onClick={() => onSelect(o.type)}
+            >
+              <div className="course-card-name">{o.name}</div>
+              <div className="course-card-location">{o.desc}</div>
+              <div className="course-card-stats">
+                {o.stats.map((st) => <span key={st} className="course-stat"><span>{st}</span></span>)}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="sticky-action-bar">
+        <button className="btn btn-primary btn-full" onClick={onNext} disabled={!gameType}>
+          Continue
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ========== STEP 2: Course Selection ==========
+function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext, onBack, onCreateCourse }) {
   const [search, setSearch] = useState('');
   const [customCourses, setCustomCourses] = useState([]);
 
@@ -102,19 +149,25 @@ function StepCourse({ selected, selectedTee, onSelect, onSelectTee, onNext, onCr
       </div>
 
       <div className="sticky-action-bar">
-        <button
-          className="btn btn-primary btn-full"
-          onClick={onNext}
-          disabled={!selected || (selected.tees && !selectedTee)}
-        >
-          Continue
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onBack}>
+            Back
+          </button>
+          <button
+            className="btn btn-primary"
+            style={{ flex: 2 }}
+            onClick={onNext}
+            disabled={!selected || (selected.tees && !selectedTee)}
+          >
+            Continue
+          </button>
+        </div>
       </div>
     </>
   );
 }
 
-// ========== STEP 2: Team Setup ==========
+// ========== STEP 3: Team Setup ==========
 function makePlayer() {
   return { name: '', handicap: '', photoURL: null };
 }
@@ -123,7 +176,8 @@ function makeTeam(num) {
   return { name: `Team ${num}`, players: [makePlayer()] };
 }
 
-function StepTeams({ teams, onChange, onNext, onBack }) {
+function StepTeams({ teams, gameType, onChange, onNext, onBack }) {
+  const maxTeams = gameType === GAME_TYPES.SKINS ? 4 : 2;
   const [errors, setErrors] = useState({});
   const [pickerFor, setPickerFor] = useState(null); // { ti, pi } | null
 
@@ -160,6 +214,17 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
     onChange(updated);
   };
 
+  const addTeam = () => {
+    if (teams.length >= maxTeams) return;
+    onChange([...teams, makeTeam(teams.length + 1)]);
+  };
+
+  const removeTeam = (ti) => {
+    if (teams.length <= 2) return;
+    onChange(teams.filter((_, i) => i !== ti));
+    setErrors({});
+  };
+
   const removePlayer = (ti, pi) => {
     const updated = teams.map((t, i) => {
       if (i !== ti) return t;
@@ -193,6 +258,16 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
           <div key={ti} className="team-block">
             <div className="team-block-header">
               <span className="team-block-title">Team {ti + 1}</span>
+              {teams.length > 2 && (
+                <button
+                  type="button"
+                  className="remove-team-btn"
+                  onClick={() => removeTeam(ti)}
+                  aria-label={`Remove team ${ti + 1}`}
+                >
+                  Remove team
+                </button>
+              )}
             </div>
 
             <div className="form-group" style={{ marginBottom: 12 }}>
@@ -286,6 +361,13 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
         ))}
       </div>
 
+      {teams.length < maxTeams && (
+        <button className="add-course-link" onClick={addTeam} style={{ marginTop: 16 }}>
+          <PlusIcon size={16} color="var(--green-dark)" />
+          Add team ({teams.length}/{maxTeams})
+        </button>
+      )}
+
       <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
         <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onBack}>
           Back
@@ -307,12 +389,103 @@ function StepTeams({ teams, onChange, onNext, onBack }) {
   );
 }
 
-// ========== STEP 3: Confirm ==========
-function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading }) {
+// ========== STEP 4: Confirm ==========
+function SkinsSetup({ skins, onChange, unitCount, alwaysOn = false }) {
+  const value = parseFloat(skins.value);
+  const valid = !isNaN(value) && value > 0;
+  const freshHole = valid ? value * Math.max(0, unitCount - 1) : null;
+  const enabled = alwaysOn || skins.enabled;
+  const isCustom = skins.customCurrency;
+
+  return (
+    <div className="card">
+      {alwaysOn ? (
+        <div>
+          <p className="section-title-sm" style={{ marginBottom: 0 }}>Stakes</p>
+          <p className="skins-setup-hint">Each team puts in one skin per hole. Lowest net takes the pot, tied holes carry over.</p>
+        </div>
+      ) : (
+        <label className="skins-setup-toggle">
+          <div>
+            <p className="section-title-sm" style={{ marginBottom: 0 }}>Skins side game</p>
+            <p className="skins-setup-hint">Every player for himself on net score. Tied holes carry over.</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={skins.enabled}
+            onChange={(e) => onChange({ ...skins, enabled: e.target.checked })}
+          />
+        </label>
+      )}
+      {enabled && (
+        <>
+          <div className="skins-setup-value">
+            <span className="confirm-label">Value per skin</span>
+            <input
+              className={`form-input form-input-sm${valid ? '' : ' error'}`}
+              value={skins.value}
+              onChange={(e) => onChange({ ...skins, value: e.target.value.replace(',', '.') })}
+              inputMode="decimal"
+              type="text"
+            />
+          </div>
+          <div className="skins-currency">
+            <span className="confirm-label">Currency</span>
+            <div className="tee-selector skins-currency-options">
+              {SKIN_CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  className={`tee-btn${!isCustom && skins.currency === c.code ? ' active' : ''}`}
+                  onClick={() => onChange({ ...skins, currency: c.code, customCurrency: false })}
+                >
+                  <span className="tee-btn-name">{c.label}</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`tee-btn${isCustom ? ' active' : ''}`}
+                onClick={() => onChange({ ...skins, currency: '', customCurrency: true })}
+              >
+                <span className="tee-btn-name">Custom</span>
+              </button>
+            </div>
+            {isCustom && (
+              <input
+                className={`form-input form-input-sm${skins.currency.trim() ? '' : ' error'}`}
+                value={skins.currency}
+                onChange={(e) => onChange({ ...skins, currency: e.target.value })}
+                placeholder="e.g. SEK, £, beers"
+                maxLength={12}
+                autoFocus
+              />
+            )}
+          </div>
+          {valid && unitCount > 1 && (
+            <p className="skins-setup-hint">
+              With {unitCount} {alwaysOn ? 'teams' : 'players'} a hole is worth {formatMoney(freshHole, skins.currency)} to the winner,
+              {' '}{formatMoney(freshHole * 2, skins.currency)} after one carry.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function StepConfirm({ course, selectedTee, teams, gameType, skins, onSkinsChange, onConfirm, onBack, loading }) {
+  const isSkinsGame = gameType === GAME_TYPES.SKINS;
+  const playerCount = teams.reduce((n, t) => n + t.players.length, 0);
+  const skinsOn = isSkinsGame || skins.enabled;
+  const skinsInvalid = skinsOn && (!(parseFloat(skins.value) > 0) || !skins.currency.trim());
   return (
     <div className="page">
       <div className="card">
         <p className="section-title-sm">Course</p>
+        <div className="confirm-row">
+          <span className="confirm-label">Game</span>
+          <span className="confirm-value">{isSkinsGame ? `Skins · ${teams.length} teams` : 'Matchplay'}</span>
+        </div>
         <div className="confirm-row">
           <span className="confirm-label">Course</span>
           <span className="confirm-value">{course.name}</span>
@@ -335,7 +508,7 @@ function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading })
 
       {teams.map((team, ti) => (
         <div className="card" key={ti}>
-          <p className="section-title-sm">{team.name}</p>
+          <p className="section-title-sm">{isSkinsGame ? skinsTeamLabel(team) : team.name}</p>
           {team.players.map((p, pi) => (
             <div className="confirm-row" key={pi}>
               <span className="confirm-label">{p.name}</span>
@@ -347,6 +520,13 @@ function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading })
         </div>
       ))}
 
+      <SkinsSetup
+        skins={skins}
+        onChange={onSkinsChange}
+        unitCount={isSkinsGame ? teams.length : playerCount}
+        alwaysOn={isSkinsGame}
+      />
+
       <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
         <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onBack} disabled={loading}>
           Back
@@ -355,7 +535,7 @@ function StepConfirm({ course, selectedTee, teams, onConfirm, onBack, loading })
           className="btn btn-primary"
           style={{ flex: 2 }}
           onClick={onConfirm}
-          disabled={loading}
+          disabled={loading || skinsInvalid}
         >
           {loading ? 'Creating...' : 'Create Game'}
         </button>
@@ -439,6 +619,7 @@ export default function CreateGame() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
+  const [gameType, setGameType] = useState(null);
   const [course, setCourse] = useState(null);
   const [selectedTee, setSelectedTee] = useState(null);
 
@@ -456,7 +637,15 @@ export default function CreateGame() {
   };
 
   const [teams, setTeams] = useState(initialTeams);
+  const [skins, setSkins] = useState({ enabled: false, value: String(DEFAULT_SKIN_VALUE), currency: DEFAULT_SKIN_CURRENCY, customCurrency: false });
   const [gameCode, setGameCode] = useState(null);
+
+  const selectGameType = (type) => {
+    setGameType(type);
+    // Matchplay is always exactly two teams
+    if (type === GAME_TYPES.MATCHPLAY && teams.length > 2) setTeams(teams.slice(0, 2));
+  };
+  const isSkinsGame = gameType === GAME_TYPES.SKINS;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -487,9 +676,13 @@ export default function CreateGame() {
         course: effectiveCourse,
         teams: normalizedTeams,
         userId: user?.uid ?? null,
+        gameType: gameType || GAME_TYPES.MATCHPLAY,
+        skins: (isSkinsGame || skins.enabled)
+          ? { enabled: true, value: parseFloat(skins.value), currency: skins.currency.trim() }
+          : null,
       });
       setGameCode(code);
-      setStep(4);
+      setStep(5);
     } catch (err) {
       setError('Failed to create game. Check your Firebase config.');
       console.error(err);
@@ -501,7 +694,7 @@ export default function CreateGame() {
   return (
     <div className="app-container">
       <Header title="New Game" showBack backTo="/" />
-      <Stepper currentStep={step} />
+      <Stepper currentStep={step} steps={['Type', 'Course', 'Teams', 'Confirm', 'Share']} />
 
       {error && (
         <div style={{
@@ -518,34 +711,42 @@ export default function CreateGame() {
       )}
 
       {step === 1 && (
+        <StepGameType gameType={gameType} onSelect={selectGameType} onNext={() => setStep(2)} />
+      )}
+      {step === 2 && (
         <StepCourse
           selected={course}
           selectedTee={selectedTee}
           onSelect={setCourse}
           onSelectTee={setSelectedTee}
-          onNext={() => setStep(2)}
+          onNext={() => setStep(3)}
+          onBack={() => setStep(1)}
           onCreateCourse={() => navigate('/create-course')}
         />
       )}
-      {step === 2 && (
+      {step === 3 && (
         <StepTeams
           teams={teams}
+          gameType={gameType}
           onChange={setTeams}
-          onNext={() => setStep(3)}
-          onBack={() => setStep(1)}
+          onNext={() => setStep(4)}
+          onBack={() => setStep(2)}
         />
       )}
-      {step === 3 && (
+      {step === 4 && (
         <StepConfirm
           course={effectiveCourse}
           selectedTee={selectedTee}
           teams={teams}
+          gameType={gameType}
+          skins={skins}
+          onSkinsChange={setSkins}
           onConfirm={handleConfirm}
-          onBack={() => setStep(2)}
+          onBack={() => setStep(3)}
           loading={loading}
         />
       )}
-      {step === 4 && (
+      {step === 5 && (
         <StepShare
           gameCode={gameCode}
           onStart={(code) => navigate(`/game/${code}`)}

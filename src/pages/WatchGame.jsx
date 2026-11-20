@@ -5,6 +5,10 @@ import MatchStateBlock from '../components/MatchStateBlock';
 import Scorecard from '../components/Scorecard';
 import { computeMatchScore, getMatchStatus, adjustTeamsForCourse } from '../utils/scoring';
 import { TrophyIcon } from '../components/GolfIcon';
+import SkinsSummary from '../components/SkinsSummary';
+import SkinsStateBlock from '../components/SkinsStateBlock';
+import Leaderboard from '../components/Leaderboard';
+import { computeSkins, getGameType, getSkinsSettings, getSkinsUnits, GAME_TYPES } from '../utils/skins';
 
 export default function WatchGame() {
   const { code } = useParams();
@@ -41,6 +45,30 @@ export default function WatchGame() {
   const adjTeams = adjustTeamsForCourse(game.teams, course);
   const isComplete = game.status === 'complete';
   const isActive = game.status === 'active';
+  const skins = getSkinsSettings(game);
+
+  // Skins game: no banquet reveal, so everything is shown live.
+  if (getGameType(game) === GAME_TYPES.SKINS) {
+    const skinsResult = computeSkins(scores, getSkinsUnits(game, adjTeams), course.holes, skins.value);
+    return (
+      <div className="app-container" style={{ display: 'flex', flexDirection: 'column' }}>
+        <Header
+          title={isComplete ? 'Round Complete' : `${course.name.split(' ')[0]} — Skins`}
+          rightElement={isActive ? <div className="live-badge">LIVE</div> : null}
+        />
+        <div className="page" style={{ flex: 1, overflowY: 'auto' }}>
+          <SkinsStateBlock skinsResult={skinsResult} currency={skins.currency} currentHole={isActive ? game.currentHole : null} />
+          <Leaderboard scores={scores} teams={game.teams} course={course} variant="skins" skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
+          <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
+          {isActive && (
+            <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--grey-500)', marginTop: 12 }}>
+              Scores update live as the round progresses
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Keep the last few holes off the public leaderboard so the winner isn't
   // spoiled before the reveal — the scorer's own view (GameView) is unaffected.
@@ -53,6 +81,7 @@ export default function WatchGame() {
   const [t0pts, t1pts] = computeMatchScore(scores, adjTeams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
+  const skinsResult = skins ? computeSkins(scores, getSkinsUnits(game, adjTeams), visibleHoles, skins.value, { isFullRound: visibleHoles.length === course.holes.length }) : null;
 
   const liveIndicator = isActive ? (
     <div className="live-badge">LIVE</div>
@@ -101,7 +130,16 @@ export default function WatchGame() {
           {status} thru {visibleHoles.length}
         </p>
 
-        <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
+        <Scorecard scores={scores} teams={game.teams} course={publicCourse} skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
+
+        {skinsResult && (
+          <SkinsSummary
+            skinsResult={skinsResult}
+            value={skins.value}
+            currency={skins.currency}
+            hiddenNote={`holes ${firstHiddenHole}–${lastHiddenHole} hidden`}
+          />
+        )}
 
         {isActive && (
           <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--grey-500)', marginTop: 12 }}>

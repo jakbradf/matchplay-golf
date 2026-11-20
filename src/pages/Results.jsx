@@ -2,7 +2,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../hooks/useGame';
 import Header from '../components/Header';
 import Scorecard from '../components/Scorecard';
-import { computeMatchScore, getMatchStatus } from '../utils/scoring';
+import { computeMatchScore, getMatchStatus, adjustTeamsForCourse } from '../utils/scoring';
+import SkinsSummary from '../components/SkinsSummary';
+import Leaderboard from '../components/Leaderboard';
+import { computeSkins, getGameType, getSkinsSettings, getSkinsUnits, formatSignedMoney, GAME_TYPES } from '../utils/skins';
 import { TrophyIcon } from '../components/GolfIcon';
 
 export default function Results() {
@@ -37,6 +40,47 @@ export default function Results() {
     );
   }
 
+  if (getGameType(game) === GAME_TYPES.SKINS) {
+    const skins = getSkinsSettings(game);
+    const adjTeams = adjustTeamsForCourse(game.teams, course);
+    const skinsResult = computeSkins(scores, getSkinsUnits(game, adjTeams), course.holes, skins.value);
+    const ranked = [...skinsResult.totals].sort((a, b) => b.net - a.net);
+    const top = ranked[0];
+    const sharedTop = ranked.filter((t) => t.net === top.net).length > 1;
+
+    return (
+      <div className="app-container">
+        <Header title="Round Complete" showBack backTo="/" />
+        <div className="page">
+          <div className="results-banner">
+            <div className="results-trophy">
+              <TrophyIcon size={56} color="rgba(255,255,255,0.9)" />
+            </div>
+            <div className="results-winner">
+              {top.net > 0 && !sharedTop ? `${top.unit.name} wins` : 'Skins complete'}
+            </div>
+            <div className="results-score">
+              {top.net > 0 && !sharedTop ? formatSignedMoney(top.net, skins.currency) : 'No outright winner'}
+            </div>
+            <div className="results-subtitle">{game.course.name}</div>
+          </div>
+
+          <Leaderboard scores={scores} teams={game.teams} course={course} variant="skins" skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
+          <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => navigate('/')}>
+              Home
+            </button>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('/create')}>
+              New Game
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Keep the last few holes off this page too — it's reachable straight from
   // "My Games" without going through the scorer's own finish flow.
   const HIDDEN_HOLE_COUNT = 3;
@@ -48,6 +92,10 @@ export default function Results() {
   const [t0pts, t1pts] = computeMatchScore(scores, game.teams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
+  const skins = getSkinsSettings(game);
+  const skinsResult = skins
+    ? computeSkins(scores, getSkinsUnits(game, adjustTeamsForCourse(game.teams, course)), visibleHoles, skins.value, { isFullRound: visibleHoles.length === course.holes.length })
+    : null;
 
   return (
     <div className="app-container">
@@ -86,7 +134,16 @@ export default function Results() {
         <div className="divider" />
 
         <p className="section-title">Scorecard (thru {visibleHoles.length})</p>
-        <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
+        <Scorecard scores={scores} teams={game.teams} course={publicCourse} skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
+
+        {skinsResult && (
+          <SkinsSummary
+            skinsResult={skinsResult}
+            value={skins.value}
+            currency={skins.currency}
+            hiddenNote={`holes ${firstHiddenHole}–${lastHiddenHole} hidden`}
+          />
+        )}
 
         <div className="game-code-display mt-16">
           <div className="game-code-label">Game Code</div>

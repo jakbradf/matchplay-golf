@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { adjustTeamsForCourse } from '../utils/scoring';
 import { getPlayerStats, getPlayerHoleGrid } from '../utils/individualStats';
+import { formatMoney, formatSignedMoney, settleUp } from '../utils/skins';
 
 const TABS = [
   { key: 'gross', label: 'Gross' },
@@ -57,12 +58,81 @@ function HalfGrid({ half, label }) {
   );
 }
 
-export default function Leaderboard({ scores, teams, course, onEndGame }) {
-  const [tab, setTab] = useState('gross');
+function MoneyTable({ skins }) {
+  const { result, currency } = skins;
+  const ranked = [...result.totals].sort((a, b) => b.net - a.net);
+  const payments = settleUp(result.totals);
+  const played = result.holes.filter((h) => h.status === 'won' || h.status === 'carry').length;
+
+  return (
+    <>
+      <p style={{ fontSize: '0.78rem', color: 'var(--grey-600)', margin: '10px 0 0' }}>
+        Skins &middot; money &middot; thru {played}
+      </p>
+      <div className="gm-lb-colheader">
+        <span style={{ width: 16 }}>#</span>
+        <span style={{ flex: 1 }}>{result.units.some((u) => u.sub) ? 'Team' : 'Player'}</span>
+        <span style={{ width: 40, textAlign: 'right' }}>Skins</span>
+        <span style={{ width: 76, textAlign: 'right' }}>Money</span>
+      </div>
+      {ranked.map((t) => {
+        const rank = ranked.findIndex((x) => x.net === t.net) + 1;
+        return (
+          <div key={t.unit.key} className="gm-lb-row">
+            <div className="gm-lb-row-main" style={{ cursor: 'default' }}>
+              <span className="gm-lb-rank">{rank}</span>
+              <div className="gm-lb-name-col">
+                <div className="gm-lb-name-row"><span className="gm-lb-name">{t.unit.name}</span></div>
+                <div className="gm-lb-meta">
+                  {t.unit.sub ? `${t.unit.sub} · ` : ''}
+                  {t.holesWon ? `${t.holesWon} hole${t.holesWon > 1 ? 's' : ''} won` : 'no holes won'}
+                </div>
+              </div>
+              <span className="gm-lb-gross" style={{ width: 40 }}>{Math.round(t.skins * 10) / 10}</span>
+              <span className={`skins-money${t.net > 0 ? ' up' : t.net < 0 ? ' down' : ''}`}>
+                {formatSignedMoney(t.net, currency)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+
+      {result.openCarry > 0 && (
+        <p className="skins-carry-note" style={{ margin: '10px 20px 0' }}>
+          {formatMoney(result.openCarryWorth, currency)} still riding, not included above
+        </p>
+      )}
+
+      <div className="skins-settle">
+        <p className="section-title-sm" style={{ marginBottom: 6 }}>
+          {result.complete ? 'Settle up' : 'Settle up so far'}
+        </p>
+        {payments.length === 0 ? (
+          <p className="skins-settle-none">Nobody owes anything yet</p>
+        ) : (
+          payments.map((pm, i) => (
+            <div key={i} className="skins-settle-row">
+              <span><strong>{pm.from.name}</strong> pays <strong>{pm.to.name}</strong></span>
+              <span className="skins-settle-amt">{formatMoney(pm.amount, currency)}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+export default function Leaderboard({ scores, teams, course, onEndGame, variant = 'matchplay', skins = null }) {
+  const isSkins = variant === 'skins';
+  const baseTabs = isSkins ? TABS.filter((t) => t.key !== 'match') : TABS;
+  const tabs = !skins ? baseTabs
+    : isSkins ? [{ key: 'money', label: 'Money' }, ...baseTabs]
+    : [...baseTabs, { key: 'money', label: 'Skins' }];
+  const [tab, setTab] = useState(isSkins && skins ? 'money' : 'gross');
   const [openKey, setOpenKey] = useState(null);
 
   const adjTeams = adjustTeamsForCourse(teams, course);
-  const rows = getPlayerStats(scores, adjTeams, course.holes, tab === 'net' ? 'net' : 'gross');
+  const rows = getPlayerStats(scores, adjTeams, course.holes, tab === 'net' ? 'net' : 'gross', !isSkins);
 
   const sorted = [...rows].sort((a, b) => {
     if (tab === 'match') return b.up - a.up || a.toPar - b.toPar;
@@ -77,7 +147,7 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
   return (
     <div>
       <div className="gm-lb-tabs">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.key}
             className={`gm-lb-tab${tab === t.key ? ' active' : ''}`}
@@ -88,8 +158,9 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
         ))}
       </div>
 
+      {tab === 'money' && skins ? <MoneyTable skins={skins} /> : <>
       <p style={{ fontSize: '0.78rem', color: 'var(--grey-600)', margin: '10px 0 0' }}>
-        Fourball &middot; better ball &middot; {modeLabel} &middot; thru {maxThru}
+        {isSkins ? 'Skins' : <>Fourball &middot; better ball</>} &middot; {modeLabel} &middot; thru {maxThru}
       </p>
 
       <div className="gm-lb-colheader">
@@ -115,7 +186,9 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
               <div className="gm-lb-name-col">
                 <div className="gm-lb-name-row">
                   <span className="gm-lb-name">{r.player.name}</span>
-                  <span className={`gm-lb-team-tag ${r.teamLabel.toLowerCase()}`}>{r.teamLabel}</span>
+                  {!(isSkins && teams[r.teamIndex].players.length === 1) && (
+                    <span className={`gm-lb-team-tag ${r.teamLabel.toLowerCase()}`}>{r.teamLabel}</span>
+                  )}
                 </div>
                 <div className="gm-lb-meta">hcp {r.player.handicap} net {r.net}</div>
               </div>
@@ -139,6 +212,7 @@ export default function Leaderboard({ scores, teams, course, onEndGame }) {
           </div>
         );
       })}
+      </>}
 
       {onEndGame && (
         <div style={{ marginTop: 16 }}>

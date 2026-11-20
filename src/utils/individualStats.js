@@ -8,8 +8,8 @@ export function getIndividualNet(gross, handicap, strokeIndex) {
 
 // Per-player standings row: gross/net totals, to-par, holes played, and the running
 // team match differential (their team's "n up"/"n down" as of the last played hole).
-export function getPlayerStats(allHoleScores, teams, courseHoles, mode = 'gross') {
-  const results = getHoleResultsSeries(allHoleScores, teams, courseHoles);
+export function getPlayerStats(allHoleScores, teams, courseHoles, mode = 'gross', withMatch = true) {
+  const results = withMatch ? getHoleResultsSeries(allHoleScores, teams, courseHoles) : courseHoles.map(() => null);
   const rows = [];
 
   teams.forEach((team, teamIndex) => {
@@ -32,7 +32,7 @@ export function getPlayerStats(allHoleScores, teams, courseHoles, mode = 'gross'
         player,
         teamIndex,
         playerIndex,
-        teamLabel: teamIndex === 0 ? 'A' : 'B',
+        teamLabel: 'ABCD'[teamIndex] || String(teamIndex + 1),
         gross,
         net,
         par,

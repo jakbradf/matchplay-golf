@@ -14,7 +14,7 @@ import { db } from './config';
 import { generateGameCode } from '../utils/gameCode';
 
 // Create a new game document in Firestore
-export async function createGame({ course, teams, userId = null }) {
+export async function createGame({ course, teams, userId = null, skins = null, gameType = 'matchplay' }) {
   let code;
   let exists = true;
 
@@ -32,10 +32,12 @@ export async function createGame({ course, teams, userId = null }) {
     code,
     status: 'lobby',
     course: { id: course.id, name: course.name },
+    gameType,
     teams,
     currentHole: 1,
     scorerCode,
     createdBy: userId,
+    ...(skins?.enabled ? { skins: { enabled: true, value: skins.value, currency: skins.currency } } : {}),
     createdAt: serverTimestamp(),
   };
 

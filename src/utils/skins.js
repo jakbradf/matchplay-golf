@@ -180,3 +180,28 @@ export function formatSignedMoney(amount, currency = DEFAULT_SKIN_CURRENCY) {
   if (amount === 0) return formatMoney(0, currency);
   return `${amount > 0 ? '+' : '−'}${formatMoney(Math.abs(amount), currency)}`;
 }
+
+/*
+ * Who pays whom, with as few payments as possible: repeatedly match the
+ * biggest loser with the biggest winner. totals = computeSkins().totals.
+ */
+export function settleUp(totals) {
+  const cents = (x) => Math.round(x * 100);
+  const debtors = totals.filter((t) => t.net < 0).map((t) => ({ unit: t.unit, left: -cents(t.net) }));
+  const creditors = totals.filter((t) => t.net > 0).map((t) => ({ unit: t.unit, left: cents(t.net) }));
+  const payments = [];
+
+  while (debtors.length && creditors.length) {
+    debtors.sort((a, b) => b.left - a.left);
+    creditors.sort((a, b) => b.left - a.left);
+    const d = debtors[0];
+    const c = creditors[0];
+    const amt = Math.min(d.left, c.left);
+    payments.push({ from: d.unit, to: c.unit, amount: amt / 100 });
+    d.left -= amt;
+    c.left -= amt;
+    if (d.left === 0) debtors.shift();
+    if (c.left === 0) creditors.shift();
+  }
+  return payments;
+}

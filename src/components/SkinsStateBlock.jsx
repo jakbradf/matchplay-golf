@@ -27,6 +27,8 @@ export default function SkinsStateBlock({ skinsResult, currency, currentHole }) 
   const { holes, totals } = skinsResult;
   const played = holes.filter((h) => h.status === 'won' || h.status === 'carry').length;
   const leader = [...totals].sort((a, b) => b.net - a.net)[0];
+  const leaders = totals.filter((t) => t.net === leader.net);
+  const leaderName = leaders.length > 2 ? `${leaders.length} tied` : leaders.map((t) => t.unit.name).join(' & ');
   const anyWon = totals.some((t) => t.net !== 0);
   const current = holes.find((h) => h.hole.number === currentHole);
 
@@ -35,7 +37,7 @@ export default function SkinsStateBlock({ skinsResult, currency, currentHole }) 
       <div className="gm-match-row">
         <div>
           <div className="gm-match-standing" style={{ color: anyWon ? GREEN : INK, fontSize: 28 }}>
-            {anyWon ? `${leader.unit.name} ${formatSignedMoney(leader.net, currency)}` : 'All square'}
+            {anyWon ? `${leaderName} ${formatSignedMoney(leader.net, currency)}` : 'All square'}
           </div>
         </div>
         <div className="gm-match-sub">

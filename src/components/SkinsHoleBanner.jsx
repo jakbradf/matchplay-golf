@@ -16,9 +16,11 @@ export default function SkinsHoleBanner({ skinsResult, holeNumber, currency }) {
     line = `${h.winner.name} takes ${formatMoney(h.worth, currency)}`;
   } else if (h.status === 'carry') {
     tone = 'carry';
+    const everyone = h.tied.length === skinsResult.units.length;
+    const who = everyone ? 'All tied' : `${h.tied.map((u) => u.name).join(' & ')} tied`;
     line = isLast
-      ? `Tied, ${formatMoney(h.worth, currency)} left in the pot`
-      : `Tied, ${formatMoney(h.worth, currency)} carries to hole ${holeNumber + 1}`;
+      ? `${who} on net ${h.best}, ${formatMoney(h.worth, currency)} left in the pot`
+      : `${who} on net ${h.best}, ${formatMoney(h.worth, currency)} carries to hole ${holeNumber + 1}`;
   } else {
     line = h.carriedIn > 0
       ? `${h.carriedIn} hole${h.carriedIn > 1 ? 's' : ''} carried in`

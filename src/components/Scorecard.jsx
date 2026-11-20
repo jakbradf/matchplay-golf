@@ -7,7 +7,7 @@ const VIEWS = [
   { key: 'grid', label: 'Grid' },
 ];
 
-export default function Scorecard({ scores, teams, course, onEndGame }) {
+export default function Scorecard({ scores, teams, course, onEndGame, skins = null }) {
   const [view, setView] = useState('standings');
 
   return (
@@ -25,7 +25,7 @@ export default function Scorecard({ scores, teams, course, onEndGame }) {
       </div>
 
       {view === 'standings'
-        ? <Leaderboard scores={scores} teams={teams} course={course} onEndGame={onEndGame} />
+        ? <Leaderboard scores={scores} teams={teams} course={course} onEndGame={onEndGame} skins={skins} />
         : <ScorecardGrid scores={scores} teams={teams} course={course} />}
     </div>
   );

@@ -58,8 +58,8 @@ export default function WatchGame() {
         />
         <div className="page" style={{ flex: 1, overflowY: 'auto' }}>
           <SkinsStateBlock skinsResult={skinsResult} currency={skins.currency} currentHole={isActive ? game.currentHole : null} />
+          <Leaderboard scores={scores} teams={game.teams} course={course} variant="skins" skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
           <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
-          <Leaderboard scores={scores} teams={game.teams} course={course} variant="skins" />
           {isActive && (
             <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--grey-500)', marginTop: 12 }}>
               Scores update live as the round progresses
@@ -130,7 +130,7 @@ export default function WatchGame() {
           {status} thru {visibleHoles.length}
         </p>
 
-        <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
+        <Scorecard scores={scores} teams={game.teams} course={publicCourse} skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
 
         {skinsResult && (
           <SkinsSummary

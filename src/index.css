@@ -3198,3 +3198,30 @@ body {
 }
 .gm-lb-team-tag.c { background: #e7edf8; color: var(--navy); }
 .gm-lb-team-tag.d { background: var(--gold-light); color: #7a6008; }
+.skins-money {
+  width: 76px;
+  text-align: right;
+  font: 700 15px/1 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--grey-700);
+}
+.skins-money.up { color: var(--win); }
+.skins-money.down { color: var(--red); }
+.skins-settle {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-lg);
+}
+.skins-settle-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  font-size: 0.9375rem;
+  color: var(--grey-800);
+  border-bottom: 1px solid var(--grey-100);
+}
+.skins-settle-row:last-child { border-bottom: none; }
+.skins-settle-amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.skins-settle-none { font-size: 0.875rem; color: var(--grey-600); }

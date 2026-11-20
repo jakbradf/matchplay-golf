@@ -65,11 +65,8 @@ export default function Results() {
             <div className="results-subtitle">{game.course.name}</div>
           </div>
 
+          <Leaderboard scores={scores} teams={game.teams} course={course} variant="skins" skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
           <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
-
-          <div className="divider" />
-          <p className="section-title">Scorecard</p>
-          <Leaderboard scores={scores} teams={game.teams} course={course} variant="skins" />
 
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => navigate('/')}>
@@ -137,7 +134,7 @@ export default function Results() {
         <div className="divider" />
 
         <p className="section-title">Scorecard (thru {visibleHoles.length})</p>
-        <Scorecard scores={scores} teams={game.teams} course={publicCourse} />
+        <Scorecard scores={scores} teams={game.teams} course={publicCourse} skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
 
         {skinsResult && (
           <SkinsSummary

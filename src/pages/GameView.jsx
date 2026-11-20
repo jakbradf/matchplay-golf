@@ -342,12 +342,12 @@ function HoleScoringView({ game, scores, course, gameCode, onShare }) {
         <div style={{ padding: 16, overflowY: 'auto', flex: 1 }}>
           {isSkinsGame ? (
             <>
+              <Leaderboard scores={allHoleScores} teams={game.teams} course={course} variant="skins" skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
               <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
-              <Leaderboard scores={allHoleScores} teams={game.teams} course={course} variant="skins" />
             </>
           ) : (
             <>
-              <Scorecard scores={allHoleScores} teams={game.teams} course={course} />
+              <Scorecard scores={allHoleScores} teams={game.teams} course={course} skins={skinsResult ? { result: skinsResult, currency: skins.currency } : null} />
               {skinsResult && (
                 <SkinsSummary skinsResult={skinsResult} value={skins.value} currency={skins.currency} />
               )}

@@ -81,7 +81,7 @@ export default function WatchGame() {
   const [t0pts, t1pts] = computeMatchScore(scores, adjTeams, visibleHoles);
   const status = getMatchStatus([t0pts, t1pts], [game.teams[0].name, game.teams[1].name]);
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
-  const skinsResult = skins ? computeSkins(scores, getSkinsUnits(game, adjTeams), visibleHoles, skins.value) : null;
+  const skinsResult = skins ? computeSkins(scores, getSkinsUnits(game, adjTeams), visibleHoles, skins.value, { isFullRound: visibleHoles.length === course.holes.length }) : null;
 
   const liveIndicator = isActive ? (
     <div className="live-badge">LIVE</div>

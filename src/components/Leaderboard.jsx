@@ -88,7 +88,7 @@ function MoneyTable({ skins }) {
                   {t.holesWon ? `${t.holesWon} hole${t.holesWon > 1 ? 's' : ''} won` : 'no holes won'}
                 </div>
               </div>
-              <span className="gm-lb-gross" style={{ width: 40 }}>{t.skins}</span>
+              <span className="gm-lb-gross" style={{ width: 40 }}>{Math.round(t.skins * 10) / 10}</span>
               <span className={`skins-money${t.net > 0 ? ' up' : t.net < 0 ? ' down' : ''}`}>
                 {formatSignedMoney(t.net, currency)}
               </span>

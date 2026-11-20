@@ -76,10 +76,17 @@ export function skinsTeamLabel(team) {
  * Holes are resolved in order. If a hole is missing a score, every hole after it
  * stays 'pending' because its carry-in isn't known yet.
  *
+ * Pot left after the last hole: once every hole is scored, if the last hole
+ * was tied, the pot goes to the lowest total net over the holes in that pot
+ * (the run of carried holes ending on the last hole). Still level on that
+ * total: the pot is split evenly between them.
+ * Pass { isFullRound: false } when courseHoles is only part of the round
+ * (e.g. last holes hidden for the reveal) so nothing is decided early.
+ *
  * Strokes are given off the lowest handicap among all players.
  * Handicaps must already be course-adjusted (adjustTeamsForCourse).
  */
-export function computeSkins(allHoleScores, units, courseHoles, value = DEFAULT_SKIN_VALUE) {
+export function computeSkins(allHoleScores, units, courseHoles, value = DEFAULT_SKIN_VALUE, { isFullRound = true } = {}) {
   const n = units.length;
   const allMembers = units.flatMap((u) => u.members);
   const minHandicap = Math.min(...allMembers.map((m) => m.handicap));
@@ -143,9 +150,48 @@ export function computeSkins(allHoleScores, units, courseHoles, value = DEFAULT_
     holes.push({ ...base, status: 'won', nets, best, winner: units[w], winnerIdx: w });
   });
 
+  const complete = holes.length > 0 && holes.every((h) => h.status === 'won' || h.status === 'carry');
+
+  // Pot left on the last hole: lowest total net over the pot's holes takes it.
+  let playoff = null;
+  const last = holes[holes.length - 1];
+  if (isFullRound && complete && last.status === 'carry') {
+    let start = holes.length - 1;
+    while (start > 0 && holes[start - 1].status === 'carry') start -= 1;
+    const potHoles = holes.slice(start);
+    const sums = units.map((_, i) => potHoles.reduce((acc, h) => acc + h.nets[i], 0));
+    const best = Math.min(...sums);
+    const winnerIdx = sums.reduce((acc, x, i) => (x === best ? [...acc, i] : acc), []);
+    const k = winnerIdx.length;
+    const potSkins = last.skinsOnHole;
+
+    totals.forEach((t, i) => {
+      if (winnerIdx.includes(i)) {
+        t.skins += potSkins / k;
+        t.holesWon += 1;
+        // Each winner gets an equal share of the whole pot, minus their own stake.
+        t.net += potSkins * value * (n / k - 1);
+      } else {
+        t.net -= potSkins * value;
+      }
+    });
+
+    playoff = {
+      holeNumbers: potHoles.map((h) => h.hole.number),
+      sums,
+      best,
+      winners: winnerIdx.map((i) => units[i]),
+      split: k > 1,
+      skins: potSkins,
+      worth: potSkins * perSkinGain,
+      // What each winner gains when split
+      shareGain: potSkins * value * (n / k - 1),
+    };
+  }
+
   const lastResolved = [...holes].reverse().find((h) => h.status === 'won' || h.status === 'carry');
-  // Pot still riding after the last scored hole (e.g. 18 halved, or carry into hidden holes)
-  const openCarry = lastResolved?.status === 'carry' ? lastResolved.skinsOnHole : 0;
+  // Pot still riding after the last scored hole (mid-round, or carry into hidden holes)
+  const openCarry = !playoff && lastResolved?.status === 'carry' ? lastResolved.skinsOnHole : 0;
 
   return {
     units,
@@ -154,7 +200,8 @@ export function computeSkins(allHoleScores, units, courseHoles, value = DEFAULT_
     openCarry,
     openCarryWorth: openCarry * perSkinGain,
     minHandicap,
-    complete: holes.length > 0 && holes.every((h) => h.status === 'won' || h.status === 'carry'),
+    complete,
+    playoff,
   };
 }
 

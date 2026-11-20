@@ -94,7 +94,7 @@ export default function Results() {
   const winnerIdx = t0pts > t1pts ? 0 : t1pts > t0pts ? 1 : null;
   const skins = getSkinsSettings(game);
   const skinsResult = skins
-    ? computeSkins(scores, getSkinsUnits(game, adjustTeamsForCourse(game.teams, course)), visibleHoles, skins.value)
+    ? computeSkins(scores, getSkinsUnits(game, adjustTeamsForCourse(game.teams, course)), visibleHoles, skins.value, { isFullRound: visibleHoles.length === course.holes.length })
     : null;
 
   return (

@@ -2,7 +2,7 @@ import { formatMoney } from '../utils/skins';
 
 // Hole-by-hole skins results. Standings and settle-up live in the leaderboard's Money tab.
 export default function SkinsSummary({ skinsResult, value, currency, hiddenNote }) {
-  const { holes, openCarry, openCarryWorth } = skinsResult;
+  const { holes, openCarry, openCarryWorth, playoff, units } = skinsResult;
 
   return (
     <div className="skins-card">
@@ -16,6 +16,22 @@ export default function SkinsSummary({ skinsResult, value, currency, hiddenNote 
           {formatMoney(openCarryWorth, currency)} riding ({openCarry} hole{openCarry > 1 ? 's' : ''} carried)
           {hiddenNote ? ` · ${hiddenNote}` : ''}
         </p>
+      )}
+
+      {playoff && (
+        <div className="skins-playoff">
+          <p className="skins-playoff-title">
+            Pot after 18: {playoff.winners.length === units.length
+              ? 'everyone level, nobody wins it'
+              : playoff.split
+              ? `split between ${playoff.winners.map((u) => u.name).join(' & ')}`
+              : `${playoff.winners[0].name} takes ${formatMoney(playoff.worth, currency)}`}
+          </p>
+          <p className="skins-playoff-sub">
+            Lowest net over holes {playoff.holeNumbers.join(', ')}:{' '}
+            {units.map((u, i) => `${u.name} ${playoff.sums[i]}`).join(' · ')}
+          </p>
+        </div>
       )}
 
       <div className="skins-holes">

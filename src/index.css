@@ -3225,3 +3225,11 @@ body {
 .skins-settle-row:last-child { border-bottom: none; }
 .skins-settle-amt { font-weight: 700; font-variant-numeric: tabular-nums; }
 .skins-settle-none { font-size: 0.875rem; color: var(--grey-600); }
+.skins-playoff {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--win-light);
+}
+.skins-playoff-title { font-size: 0.875rem; font-weight: 600; color: var(--win); }
+.skins-playoff-sub { font-size: 0.75rem; color: var(--grey-700); margin-top: 2px; }

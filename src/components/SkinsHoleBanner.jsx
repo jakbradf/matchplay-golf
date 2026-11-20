@@ -18,9 +18,24 @@ export default function SkinsHoleBanner({ skinsResult, holeNumber, currency }) {
     tone = 'carry';
     const everyone = h.tied.length === skinsResult.units.length;
     const who = everyone ? 'All tied' : `${h.tied.map((u) => u.name).join(' & ')} tied`;
-    line = isLast
-      ? `${who} on net ${h.best}, ${formatMoney(h.worth, currency)} left in the pot`
-      : `${who} on net ${h.best}, ${formatMoney(h.worth, currency)} carries to hole ${holeNumber + 1}`;
+    const po = isLast ? skinsResult.playoff : null;
+    if (po) {
+      tone = 'won';
+      const range = po.holeNumbers.length > 1
+        ? `holes ${po.holeNumbers[0]}–${po.holeNumbers[po.holeNumbers.length - 1]}`
+        : `hole ${po.holeNumbers[0]}`;
+      const allLevel = po.winners.length === skinsResult.units.length;
+      line = allLevel
+        ? `Everyone level on net ${po.best} over ${range}, nobody wins the pot`
+        : po.split
+          ? `${po.winners.map((u) => u.name).join(' & ')} share the pot, net ${po.best} over ${range}`
+          : `${po.winners[0].name} takes the pot, lowest net over ${range} (${po.best})`;
+      if (allLevel) tone = 'carry';
+    } else {
+      line = isLast
+        ? `${who} on net ${h.best}, pot goes to lowest net over the carried holes`
+        : `${who} on net ${h.best}, ${formatMoney(h.worth, currency)} carries to hole ${holeNumber + 1}`;
+    }
   } else {
     line = h.carriedIn > 0
       ? `${h.carriedIn} hole${h.carriedIn > 1 ? 's' : ''} carried in`
